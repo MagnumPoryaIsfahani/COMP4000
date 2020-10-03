@@ -11,6 +11,7 @@ import bcrypt
 import random
 import string
 import time
+import secrets
 
 class Users(users_pb2_grpc.UsersServicer):
     def LoginUserAccount(self, request, context):
@@ -23,7 +24,7 @@ class Users(users_pb2_grpc.UsersServicer):
         # check if there is matching user
         json_db_file = open("userDB.json", "r+")
         user_entries = json.load(json_db_file)
-        user = user_entries[username]
+        user = user_entries.get(username)
 
         # user doesn't exist
         if not user:
@@ -31,11 +32,17 @@ class Users(users_pb2_grpc.UsersServicer):
 
         stored_hash = user["password"]
         is_valid_creditials = bcrypt.checkpw(password.encode(), stored_hash.encode())
-
+        
         if is_valid_creditials:
             
-            user["token"] = self.GenerateAuthToken()
-            user["login_time"] = time.time()
+            
+            if not user.get("login_time"):
+                user["login_time"] = time.time()
+                user["token"] = secrets.token_urlsafe(8)
+            elif user.get("login_time",0)+500 > time.time() :
+                user["login_time"] = time.time()
+                print("token still valid")
+                
             user_entries[username] = user
 
             self.WriteToDB(user_entries)
