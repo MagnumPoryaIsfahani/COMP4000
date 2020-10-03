@@ -20,6 +20,11 @@ class UsersStub(object):
                 request_serializer=users__pb2.CreateUserRequest.SerializeToString,
                 response_deserializer=users__pb2.CreateUserReply.FromString,
                 )
+        self.LoginUserAccount = channel.unary_unary(
+                '/users.Users/LoginUserAccount',
+                request_serializer=users__pb2.LoginUserRequest.SerializeToString,
+                response_deserializer=users__pb2.LoginUserReply.FromString,
+                )
 
 
 class UsersServicer(object):
@@ -27,7 +32,14 @@ class UsersServicer(object):
     """
 
     def CreateUserAccount(self, request, context):
-        """This function will receive user's input and checks in DB to see if user exists.
+        """This function will create a new user account for the user.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def LoginUserAccount(self, request, context):
+        """This function will allow a user to login to their account.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -40,6 +52,11 @@ def add_UsersServicer_to_server(servicer, server):
                     servicer.CreateUserAccount,
                     request_deserializer=users__pb2.CreateUserRequest.FromString,
                     response_serializer=users__pb2.CreateUserReply.SerializeToString,
+            ),
+            'LoginUserAccount': grpc.unary_unary_rpc_method_handler(
+                    servicer.LoginUserAccount,
+                    request_deserializer=users__pb2.LoginUserRequest.FromString,
+                    response_serializer=users__pb2.LoginUserReply.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -66,5 +83,22 @@ class Users(object):
         return grpc.experimental.unary_unary(request, target, '/users.Users/CreateUserAccount',
             users__pb2.CreateUserRequest.SerializeToString,
             users__pb2.CreateUserReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def LoginUserAccount(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/users.Users/LoginUserAccount',
+            users__pb2.LoginUserRequest.SerializeToString,
+            users__pb2.LoginUserReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

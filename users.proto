@@ -19,7 +19,7 @@ message CreateUserRequest {
 }
 
 message CreateUserReply {
-  bool message = 1; 
+  bool success = 1; 
 }
 
 // Define a message describing a single user
@@ -29,7 +29,8 @@ message LoginUserRequest {
 }
 
 message LoginUserReply {
-  bool message = 1; 
+  bool success = 1; 
+  string token = 2;
 }
 
 

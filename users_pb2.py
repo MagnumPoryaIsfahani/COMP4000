@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0busers.proto\x12\x05users\"M\n\x11\x43reateUserRequest\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\x12\x14\n\x0c\x63onfirmation\x18\x03 \x01(\t\"\"\n\x0f\x43reateUserReply\x12\x0f\n\x07message\x18\x01 \x01(\t2P\n\x05Users\x12G\n\x11\x43reateUserAccount\x12\x18.users.CreateUserRequest\x1a\x16.users.CreateUserReply\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x0busers.proto\x12\x05users\"M\n\x11\x43reateUserRequest\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\x12\x14\n\x0c\x63onfirmation\x18\x03 \x01(\t\"\"\n\x0f\x43reateUserReply\x12\x0f\n\x07success\x18\x01 \x01(\x08\"6\n\x10LoginUserRequest\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"0\n\x0eLoginUserReply\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\r\n\x05token\x18\x02 \x01(\t2\x96\x01\n\x05Users\x12G\n\x11\x43reateUserAccount\x12\x18.users.CreateUserRequest\x1a\x16.users.CreateUserReply\"\x00\x12\x44\n\x10LoginUserAccount\x12\x17.users.LoginUserRequest\x1a\x15.users.LoginUserReply\"\x00\x62\x06proto3'
 )
 
 
@@ -80,9 +80,9 @@ _CREATEUSERREPLY = _descriptor.Descriptor(
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='message', full_name='users.CreateUserReply.message', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
+      name='success', full_name='users.CreateUserReply.success', index=0,
+      number=1, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -102,8 +102,88 @@ _CREATEUSERREPLY = _descriptor.Descriptor(
   serialized_end=135,
 )
 
+
+_LOGINUSERREQUEST = _descriptor.Descriptor(
+  name='LoginUserRequest',
+  full_name='users.LoginUserRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='username', full_name='users.LoginUserRequest.username', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='password', full_name='users.LoginUserRequest.password', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=137,
+  serialized_end=191,
+)
+
+
+_LOGINUSERREPLY = _descriptor.Descriptor(
+  name='LoginUserReply',
+  full_name='users.LoginUserReply',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='success', full_name='users.LoginUserReply.success', index=0,
+      number=1, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='token', full_name='users.LoginUserReply.token', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=193,
+  serialized_end=241,
+)
+
 DESCRIPTOR.message_types_by_name['CreateUserRequest'] = _CREATEUSERREQUEST
 DESCRIPTOR.message_types_by_name['CreateUserReply'] = _CREATEUSERREPLY
+DESCRIPTOR.message_types_by_name['LoginUserRequest'] = _LOGINUSERREQUEST
+DESCRIPTOR.message_types_by_name['LoginUserReply'] = _LOGINUSERREPLY
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 CreateUserRequest = _reflection.GeneratedProtocolMessageType('CreateUserRequest', (_message.Message,), {
@@ -120,6 +200,20 @@ CreateUserReply = _reflection.GeneratedProtocolMessageType('CreateUserReply', (_
   })
 _sym_db.RegisterMessage(CreateUserReply)
 
+LoginUserRequest = _reflection.GeneratedProtocolMessageType('LoginUserRequest', (_message.Message,), {
+  'DESCRIPTOR' : _LOGINUSERREQUEST,
+  '__module__' : 'users_pb2'
+  # @@protoc_insertion_point(class_scope:users.LoginUserRequest)
+  })
+_sym_db.RegisterMessage(LoginUserRequest)
+
+LoginUserReply = _reflection.GeneratedProtocolMessageType('LoginUserReply', (_message.Message,), {
+  'DESCRIPTOR' : _LOGINUSERREPLY,
+  '__module__' : 'users_pb2'
+  # @@protoc_insertion_point(class_scope:users.LoginUserReply)
+  })
+_sym_db.RegisterMessage(LoginUserReply)
+
 
 
 _USERS = _descriptor.ServiceDescriptor(
@@ -129,8 +223,8 @@ _USERS = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=137,
-  serialized_end=217,
+  serialized_start=244,
+  serialized_end=394,
   methods=[
   _descriptor.MethodDescriptor(
     name='CreateUserAccount',
@@ -139,6 +233,16 @@ _USERS = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_CREATEUSERREQUEST,
     output_type=_CREATEUSERREPLY,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='LoginUserAccount',
+    full_name='users.Users.LoginUserAccount',
+    index=1,
+    containing_service=None,
+    input_type=_LOGINUSERREQUEST,
+    output_type=_LOGINUSERREPLY,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
   ),
