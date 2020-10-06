@@ -37,9 +37,9 @@ class Users(users_pb2_grpc.UsersServicer):
             
             
             if not user.get("login_time"):
-                user["login_time"] = time.time()
+                user["login_time"] = time.time() + 100
                 user["token"] = secrets.token_urlsafe(8)
-            elif user.get("login_time",0)+500 > time.time() :
+            elif user.get("login_time",0) > time.time() :
                 user["login_time"] = time.time()
                 print("token still valid")
                 
@@ -89,6 +89,21 @@ class Users(users_pb2_grpc.UsersServicer):
         self.WriteToDB(user_entries)
 
         return users_pb2.CreateUserReply(success=True) 
+
+    def DeleteUserAccount(self,request,context):
+        if not os.path.exists("userDB.json"):
+            return users_pb2.CreateUserReply(success=False)
+        json_db_file = open("userDB.json","r+")
+        if os.stat("userDB.json").st_size == 0:
+            return users_pb2.CreateUserReply(success=False)
+        user_entries = json.load(json_db_file)
+       
+        if user_entries[request.username].get("token") == request.token and user_entries[request.username].get("login_time",0) > time.time():
+            del user_entries[request.username]
+            json_db_file.close()
+            self.WriteToDB(user_entries)
+            return users_pb2.DeleteUserReply(success=True)
+        return users_pb2.DeleteUserReply(success=False)
 
     def WriteToDB(self, user_entries):
         # This will erase everything that was in the json file and add the proper dictionary list of users

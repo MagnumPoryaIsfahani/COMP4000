@@ -9,6 +9,8 @@ service Users {
   
   // This function will allow a user to login to their account.
   rpc LoginUserAccount (LoginUserRequest) returns (LoginUserReply) {}
+
+  rpc DeleteUserAccount (DeleteUserRequest) returns (DeleteUserReply) {}
 }
 
 // Define a message describing a single user
@@ -33,5 +35,11 @@ message LoginUserReply {
   string token = 2;
 }
 
+message DeleteUserRequest {
+  string token = 1;
+  string username = 2;
+}
 
-
+message DeleteUserReply {
+  bool success = 1;
+}

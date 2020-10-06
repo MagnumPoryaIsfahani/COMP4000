@@ -37,6 +37,15 @@ def register_user(stub):
 
         response = stub.CreateUserAccount(users_pb2.CreateUserRequest(username=new_username, password=new_password, confirmation=confirm_password))
 
+def delete_user(stub, uname, tok):
+    response = stub.DeleteUserAccount(users_pb2.DeleteUserRequest(username=uname,token=tok))
+    if response.success:
+        print("your account has been removed successfully.")
+        quit()
+    else:
+        print("your Account has not been removed.")
+        user_selection(stub, tok)
+
 # This method allows user to login to their account
 def user_login(stub):
     username = input("Enter your username: ")
@@ -51,7 +60,9 @@ def user_login(stub):
         response = stub.LoginUserAccount(users_pb2.LoginUserRequest(username=username, password=password))
 
     token = response.token
+    user_selection(stub, username, token)
 
+def user_selection(stub, username, token):
     menu_selection = input('''
 You are now logged in.
 1 to Update Password
@@ -68,7 +79,7 @@ You are now logged in.
         #user_update(stub)
         print("selection 1")
     else:
-        #delete_user(stub)
+        delete_user(stub, username, token)
         print("selection 2")
 
     # Client sends credentials to server via RPC call 
