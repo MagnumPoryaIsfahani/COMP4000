@@ -98,7 +98,7 @@ class Users(users_pb2_grpc.UsersServicer):
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     users_pb2_grpc.add_UsersServicer_to_server(Users(), server)
-    server.add_insecure_port('[::]:50051')
+    server.add_insecure_port('[::]:10001')
     server.start()
     server.wait_for_termination()
 

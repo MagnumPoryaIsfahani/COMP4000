@@ -5,7 +5,7 @@ import grpc
 
 import users_pb2
 import users_pb2_grpc
-
+import sys
 import getpass
 
 # This method confirms the password
@@ -78,7 +78,7 @@ You are now logged in.
     # Server responds with authentication failure if username does not exist, ​or password is invalid
 
 def run():
-    with grpc.insecure_channel('localhost:50051') as channel:
+    with grpc.insecure_channel(sys.argv[1]+':10001') as channel:
         stub = users_pb2_grpc.UsersStub(channel)
 
         # User Menu:
