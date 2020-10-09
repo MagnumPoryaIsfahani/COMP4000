@@ -89,7 +89,10 @@ You are now logged in.
     # Server responds with authentication failure if username does not exist, ​or password is invalid
 
 def run():
-    with grpc.insecure_channel(sys.argv[1]+':10001') as channel:
+    ipaddress = "localhost"
+    if(len(sys.argv) > 1):
+        ipaddress = sys.argv[1]
+    with grpc.insecure_channel(ipaddress+':10001') as channel:
         stub = users_pb2_grpc.UsersStub(channel)
 
         # User Menu:

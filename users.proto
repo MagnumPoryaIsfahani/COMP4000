@@ -43,3 +43,13 @@ message DeleteUserRequest {
 message DeleteUserReply {
   bool success = 1;
 }
+
+message UpdatePasswordRequest {
+  string token = 1;
+  string username = 2;
+  string password = 3;
+}
+
+message UpdatePasswordReply {
+  bool success = 1;
+}
