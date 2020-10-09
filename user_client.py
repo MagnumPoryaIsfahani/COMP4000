@@ -41,7 +41,7 @@ def delete_user(stub, uname, tok):
     response = stub.DeleteUserAccount(users_pb2.DeleteUserRequest(username=uname,token=tok))
     if response.success:
         print("your account has been removed successfully.")
-        quit()
+        user_selection(stub, tok)
     else:
         print("your Account has not been removed.")
         user_selection(stub, tok)
