@@ -92,7 +92,7 @@ You are now logged in.
     # Server responds with authentication failure if username does not exist, ​or password is invalid
 
 def run():
-    ipaddress = "localhost"
+    ip_address = "localhost"
     if(len(sys.argv) > 1):
         ipaddress = sys.argv[1]
     with grpc.insecure_channel(ipaddress+':10001') as channel:
