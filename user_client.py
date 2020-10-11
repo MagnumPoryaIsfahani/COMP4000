@@ -84,6 +84,7 @@ You are now logged in.
         delete_user(stub, username, token)
         print("selection 2")
 
+
     # Client sends credentials to server via RPC call 
     # Server compares received credentials with locally stored credentials, and replies with authentication token to client if credentials match. The token must be a 
     # random 64 bit string"
@@ -103,12 +104,14 @@ def run():
 def menu_select(stub):
     # User Menu:
     options_menu = "0"   
-    while not options_menu == "q" :
+    while options_menu:
         options_menu = input("If you already have an account then enter 1, enter 2 to Register an Account, or enter 'q' to quit: ")
         if options_menu == "1" :
            user_login(stub)  
         if options_menu == "2" :
             register_user(stub)
+        if options_menu == "q":
+            quit()
         if options_menu !="q" and options_menu != "1" and options_menu != "2" :
             print("Sorry, your input is invalid, please try again: ")
         

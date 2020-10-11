@@ -35,11 +35,8 @@ class Users(users_pb2_grpc.UsersServicer):
         
         if is_valid_creditials: 
             print("valid creds")
-            print(user)
-            print(time.time())
             if not user.get("login_time",False):
                 user["login_time"] = time.time() + 100
-#               print("token expires: "+user["login_time"]+" :: "+time.time())
                 user["token"] = secrets.token_urlsafe(8)
                 print("new token")
             elif user["login_time"] > time.time():
@@ -49,13 +46,8 @@ class Users(users_pb2_grpc.UsersServicer):
                 user["login_time"] = time.time()+100
                 user["token"] = secrets.token_urlsafe(8)
                 print("new valid token.")
-            #print("user:  ")
-            #print(user)
-            #print("entry: ")
-            #print(user_entries[username])
+
             user_entries[username] = user
-            print("after: ")
-            print(user_entries[username])
             json_db_file.close()
             self.WriteToDB(user_entries)
             
