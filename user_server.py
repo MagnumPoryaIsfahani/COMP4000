@@ -33,18 +33,30 @@ class Users(users_pb2_grpc.UsersServicer):
         stored_hash = user["password"]
         is_valid_creditials = bcrypt.checkpw(password.encode(), stored_hash.encode())
         
-        if is_valid_creditials:
-            
-            
-            if not user.get("login_time"):
+        if is_valid_creditials: 
+            print("valid creds")
+            print(user)
+            print(time.time())
+            if not user.get("login_time",False):
                 user["login_time"] = time.time() + 100
+#               print("token expires: "+user["login_time"]+" :: "+time.time())
                 user["token"] = secrets.token_urlsafe(8)
-            elif user.get("login_time",0) > time.time() :
-                user["login_time"] = time.time()
-                print("token still valid")
-                
+                print("new token")
+            elif user["login_time"] > time.time():
+                user["login_time"] = time.time()+100
+                print("login time updated")
+            else:
+                user["login_time"] = time.time()+100
+                user["token"] = secrets.token_urlsafe(8)
+                print("new valid token.")
+            #print("user:  ")
+            #print(user)
+            #print("entry: ")
+            #print(user_entries[username])
             user_entries[username] = user
-
+            print("after: ")
+            print(user_entries[username])
+            json_db_file.close()
             self.WriteToDB(user_entries)
             
             return users_pb2.LoginUserReply(success=True, token=user["token"])
@@ -91,18 +103,24 @@ class Users(users_pb2_grpc.UsersServicer):
         return users_pb2.CreateUserReply(success=True) 
 
     def DeleteUserAccount(self,request,context):
+        print("uName: "+request.username)
         if not os.path.exists("userDB.json"):
+            print("file not found")
             return users_pb2.DeleteUserReply(success=False)
         json_db_file = open("userDB.json","r+")
         if os.stat("userDB.json").st_size == 0:
+            print("no users in file")
             return users_pb2.DeleteUserReply(success=False)
         user_entries = json.load(json_db_file)
-       
+        print(user_entries[request.username])
+        print(request.token)
+        print(time.time())
         if user_entries[request.username].get("token") == request.token and user_entries[request.username].get("login_time",0) > time.time():
             del user_entries[request.username]
             json_db_file.close()
             self.WriteToDB(user_entries)
             return users_pb2.DeleteUserReply(success=True)
+        print("default")
         return users_pb2.DeleteUserReply(success=False)
 
     

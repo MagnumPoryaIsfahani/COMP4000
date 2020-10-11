@@ -37,14 +37,15 @@ def register_user(stub):
 
         response = stub.CreateUserAccount(users_pb2.CreateUserRequest(username=new_username, password=new_password, confirmation=confirm_password))
 
+#deletes a user, uname is passed for faster runtimes
 def delete_user(stub, uname, tok):
     response = stub.DeleteUserAccount(users_pb2.DeleteUserRequest(username=uname,token=tok))
     if response.success:
         print("your account has been removed successfully.")
-        user_selection(stub, tok)
+        menu_select(stub)
     else:
         print("your Account has not been removed.")
-        user_selection(stub, tok)
+        user_selection(stub,uname,tok)
 
 # This method allows user to login to their account
 def user_login(stub):
@@ -62,6 +63,7 @@ def user_login(stub):
     token = response.token
     user_selection(stub, username, token)
 
+# menu once the user has logged in
 def user_selection(stub, username, token):
     menu_selection = input('''
 You are now logged in.
@@ -71,7 +73,7 @@ You are now logged in.
     ''')
     while menu_selection != '1' and menu_selection != '2' and menu_selection != 'q':
         menu_selection = input("Incorrect input.\n1 to Update Password\n2 to Delete Account\n'q' to Quit\n")
-
+    print(menu_selection)
     if menu_selection == 'q':
         print("Goodbye")
         exit()
@@ -94,18 +96,22 @@ def run():
         ipaddress = sys.argv[1]
     with grpc.insecure_channel(ipaddress+':10001') as channel:
         stub = users_pb2_grpc.UsersStub(channel)
-
-        # User Menu:
-        options_menu = "0"   
-        while not options_menu == "q" :
-            options_menu = input("If you already have an account then enter 1, enter 2 to Register an Account, or enter 'q' to quit: ")
-            if options_menu == "1" :
-               user_login(stub)  
-            if options_menu == "2" :
-                register_user(stub)
-            if options_menu !="q" and options_menu != "1" and options_menu != "2" :
-                print("Sorry, your input is invalid, please try again: ")
+        menu_select(stub)
         quit()
+
+# the login screen
+def menu_select(stub):
+    # User Menu:
+    options_menu = "0"   
+    while not options_menu == "q" :
+        options_menu = input("If you already have an account then enter 1, enter 2 to Register an Account, or enter 'q' to quit: ")
+        if options_menu == "1" :
+           user_login(stub)  
+        if options_menu == "2" :
+            register_user(stub)
+        if options_menu !="q" and options_menu != "1" and options_menu != "2" :
+            print("Sorry, your input is invalid, please try again: ")
+        
 
 if __name__ == "__main__":
     logging.basicConfig()
