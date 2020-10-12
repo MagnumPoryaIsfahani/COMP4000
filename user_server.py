@@ -59,10 +59,6 @@ class Users(users_pb2_grpc.UsersServicer):
     def InvalidCredentialsError(self):
         return users_pb2.LoginUserReply(success=False, token="")
 
-    def GenerateAuthToken(self):
-        letters = string.ascii_letters
-        return ''.join(random.choice(letters) for i in range(16))
-
     def CreateUserAccount(self, request, context):  
 
         # Create a salt and using bcrypt, hash the user's credentials
@@ -95,7 +91,6 @@ class Users(users_pb2_grpc.UsersServicer):
         return users_pb2.CreateUserReply(success=True) 
 
     def DeleteUserAccount(self,request,context):
-        print("uName: "+request.username)
         if not os.path.exists("userDB.json"):
             print("file not found")
             return users_pb2.DeleteUserReply(success=False)
@@ -104,15 +99,12 @@ class Users(users_pb2_grpc.UsersServicer):
             print("no users in file")
             return users_pb2.DeleteUserReply(success=False)
         user_entries = json.load(json_db_file)
-        print(user_entries[request.username])
-        print(request.token)
-        print(time.time())
         if user_entries[request.username].get("token") == request.token and user_entries[request.username].get("login_time",0) > time.time():
             del user_entries[request.username]
             json_db_file.close()
             self.WriteToDB(user_entries)
             return users_pb2.DeleteUserReply(success=True)
-        print("default")
+        
         return users_pb2.DeleteUserReply(success=False)
 
     

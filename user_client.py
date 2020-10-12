@@ -94,8 +94,8 @@ You are now logged in.
 def run():
     ip_address = "localhost"
     if(len(sys.argv) > 1):
-        ipaddress = sys.argv[1]
-    with grpc.insecure_channel(ipaddress+':10001') as channel:
+        ip_address = sys.argv[1]
+    with grpc.insecure_channel(ip_address+':10001') as channel:
         stub = users_pb2_grpc.UsersStub(channel)
         menu_select(stub)
         quit()
