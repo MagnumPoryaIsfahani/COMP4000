@@ -9,15 +9,6 @@ import users_pb2_grpc
 import getpass
 
 # This method confirms the password
-def password_confirmation(password, confirmation):
-
-     while password != confirmation:
-        print("Your passwords don't match, please try again")
-        password =  getpass.getpass("Enter a password for your account: ")
-        confirmation =  getpass.getpass("Please confirm your password by retyping: ")
-        if password == confirmation:
-            break
-        continue
 
 # This method registers a new user 
 def register_user(stub):
@@ -26,7 +17,11 @@ def register_user(stub):
 
     new_password =  getpass.getpass("Enter a password for your account: ")
     confirm_password =  getpass.getpass("Please confirm your password by retyping: ")
-    password_confirmation(new_password, confirm_password)
+    while new_password != confirm_password:
+        print("Your passwords don't match, please try again")
+        new_password =  getpass.getpass("Enter a password for your account: ")
+        confirm_password =  getpass.getpass("Please confirm your password by retyping: ")
+
     
     response = stub.CreateUserAccount(users_pb2.CreateUserRequest(username=new_username, password=new_password, confirmation=confirm_password))
     
@@ -36,6 +31,28 @@ def register_user(stub):
         confirm_password =  getpass.getpass("Please confirm your password by retyping: ")
 
         response = stub.CreateUserAccount(users_pb2.CreateUserRequest(username=new_username, password=new_password, confirmation=confirm_password))
+
+def user_update(stub, token):
+    new_password =  getpass.getpass("Enter a new password for your account: ")
+    confirm_password =  getpass.getpass("Please confirm your password by retyping: ")
+    while new_password != confirm_password:
+        print("Your passwords don't match, please try again")
+        new_password =  getpass.getpass("Enter a password for your account: ")
+        confirm_password =  getpass.getpass("Please confirm your password by retyping: ")
+
+    response = stub.UpdateUserAccount(users_pb2.UpdateUserRequest(password=new_password, token=token))
+
+    if response.code == 200:
+        print("Password updated!\nReturning to login...\n")
+        user_login(stub)
+    elif response.code == 408:
+        print("Login timed out...\nReturning to login...\n")
+        user_login(stub)
+    else:
+        print("New password must differ from old password\nReturning to login...\n")
+        user_login(stub)
+
+
 
 # This method allows user to login to their account
 def user_login(stub):
@@ -52,12 +69,7 @@ def user_login(stub):
 
     token = response.token
 
-    menu_selection = input('''
-You are now logged in.
-1 to Update Password
-2 to Delete Account
-'q' to Quit
-    ''')
+    menu_selection = input("You are now logged in.\n1 to Update Password\n2 to Delete Account\n'q' to Quit\n")
     while menu_selection != '1' and menu_selection != '2' and menu_selection != 'q':
         menu_selection = input("Incorrect input.\n1 to Update Password\n2 to Delete Account\n'q' to Quit\n")
 
@@ -65,8 +77,7 @@ You are now logged in.
         print("Goodbye")
         exit()
     elif menu_selection == '1':
-        #user_update(stub)
-        print("selection 1")
+        user_update(stub, token)
     else:
         #delete_user(stub)
         print("selection 2")

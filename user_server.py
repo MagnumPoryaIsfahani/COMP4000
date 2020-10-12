@@ -32,7 +32,6 @@ class Users(users_pb2_grpc.UsersServicer):
 
         stored_hash = user["password"]
         is_valid_creditials = bcrypt.checkpw(password.encode(), stored_hash.encode())
-        
         if is_valid_creditials:
             
             
@@ -50,6 +49,37 @@ class Users(users_pb2_grpc.UsersServicer):
             return users_pb2.LoginUserReply(success=True, token=user["token"])
         
         return self.InvalidCredentialsError()
+
+    def UpdateUserAccount(self, request, context):
+        #Checks if db exists and if its empty
+        if not os.path.exists("userDB.json"):
+            return users_pb2.UpdateUserReply(code=500, token=request.token)
+        json_db_file = open("userDB.json", "r+")
+        if os.stat("userDB.json").st_size == 0:
+            return users_pb2.UpdateUserReply(code=500, token=request.token)
+        user_entries = json.load(json_db_file)
+        #finds the user to update
+        #There must be a better way to do this as this has a run time of O(n)... Maybe not important for now, we could just pass the username around everywhere in client if need be.
+        for user in user_entries:
+            if user_entries[user].get("token") == request.token and (user_entries[user].get("login_time", 0)+300) > time.time():
+                #checks to see if new password is the same as old password
+                stored_hash = user_entries[user].get("password")
+                is_valid_creditials = bcrypt.checkpw(request.password.encode(), stored_hash.encode())                
+                if is_valid_creditials:
+                    return users_pb2.UpdateUserReply(code=406, token=request.token)
+                #hashes the new password
+                hashed_binary = bcrypt.hashpw(request.password.encode(), bcrypt.gensalt())
+                password = hashed_binary.decode(encoding="utf-8")
+                updatedPassword = {"password": password}
+                #throw the updated account into the temp dictionary
+                user_entries[user].update(updatedPassword)
+                json_db_file.close()
+                #update the DB with the updated account
+                self.WriteToDB(user_entries)
+                return users_pb2.UpdateUserReply(code=200, token=request.token)
+
+        return users_pb2.UpdateUserReply(code=408 , token=request.token)
+
             
 
     def InvalidCredentialsError(self):
