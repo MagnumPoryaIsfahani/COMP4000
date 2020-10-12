@@ -30,11 +30,13 @@ message LoginUserRequest {
   string password = 2;
 }
 
+// Define a message to log a user in
 message LoginUserReply {
   bool success = 1; 
   string token = 2;
 }
 
+// Define a message to delete a user
 message DeleteUserRequest {
   string token = 1;
   string username = 2;
@@ -44,12 +46,3 @@ message DeleteUserReply {
   bool success = 1;
 }
 
-message UpdatePasswordRequest {
-  string token = 1;
-  string username = 2;
-  string password = 3;
-}
-
-message UpdatePasswordReply {
-  bool success = 1;
-}
