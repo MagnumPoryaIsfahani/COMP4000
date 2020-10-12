@@ -11,6 +11,9 @@ service Users {
   rpc LoginUserAccount (LoginUserRequest) returns (LoginUserReply) {}
 
   rpc DeleteUserAccount (DeleteUserRequest) returns (DeleteUserReply) {}
+
+  // This function will allow a user to update their password.
+  rpc UpdateUserAccount (UpdateUserRequest) returns (UpdateUserReply) {}
 }
 
 // Define a message describing a single user
@@ -44,5 +47,14 @@ message DeleteUserRequest {
 
 message DeleteUserReply {
   bool success = 1;
+// Define a message describing a single user
+message UpdateUserRequest {
+  string password = 1;
+  string token = 2;
+}
+
+message UpdateUserReply {
+  int32 code = 1;
+  string token = 2;
 }
 
