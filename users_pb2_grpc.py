@@ -24,7 +24,16 @@ class UsersStub(object):
                 '/users.Users/LoginUserAccount',
                 request_serializer=users__pb2.LoginUserRequest.SerializeToString,
                 response_deserializer=users__pb2.LoginUserReply.FromString,
-
+                )
+        self.DeleteUserAccount = channel.unary_unary(
+                '/users.Users/DeleteUserAccount',
+                request_serializer=users__pb2.DeleteUserRequest.SerializeToString,
+                response_deserializer=users__pb2.DeleteUserReply.FromString,
+                )
+        self.UpdateUserAccount = channel.unary_unary(
+                '/users.Users/UpdateUserAccount',
+                request_serializer=users__pb2.UpdateUserRequest.SerializeToString,
+                response_deserializer=users__pb2.UpdateUserReply.FromString,
                 )
 
 
@@ -46,7 +55,15 @@ class UsersServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def DeleteUserAccount(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
+    def UpdateUserAccount(self, request, context):
+        """This function will allow a user to update their password.
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -63,7 +80,16 @@ def add_UsersServicer_to_server(servicer, server):
                     servicer.LoginUserAccount,
                     request_deserializer=users__pb2.LoginUserRequest.FromString,
                     response_serializer=users__pb2.LoginUserReply.SerializeToString,
-
+            ),
+            'DeleteUserAccount': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteUserAccount,
+                    request_deserializer=users__pb2.DeleteUserRequest.FromString,
+                    response_serializer=users__pb2.DeleteUserReply.SerializeToString,
+            ),
+            'UpdateUserAccount': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateUserAccount,
+                    request_deserializer=users__pb2.UpdateUserRequest.FromString,
+                    response_serializer=users__pb2.UpdateUserReply.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -110,7 +136,8 @@ class Users(object):
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
-
+    @staticmethod
+    def DeleteUserAccount(request,
             target,
             options=(),
             channel_credentials=None,
@@ -120,6 +147,25 @@ class Users(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/users.Users/DeleteUserAccount',
+            users__pb2.DeleteUserRequest.SerializeToString,
+            users__pb2.DeleteUserReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
+    @staticmethod
+    def UpdateUserAccount(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/users.Users/UpdateUserAccount',
+            users__pb2.UpdateUserRequest.SerializeToString,
+            users__pb2.UpdateUserReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

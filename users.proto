@@ -47,6 +47,8 @@ message DeleteUserRequest {
 
 message DeleteUserReply {
   bool success = 1;
+}
+
 // Define a message describing a single user
 message UpdateUserRequest {
   string password = 1;

@@ -32,7 +32,7 @@ def register_user(stub):
 
         response = stub.CreateUserAccount(users_pb2.CreateUserRequest(username=new_username, password=new_password, confirmation=confirm_password))
 
-#deletes a user, uname is passed for faster runtimes
+# deletes a user
 def delete_user(stub, uname, tok):
     response = stub.DeleteUserAccount(users_pb2.DeleteUserRequest(username=uname,token=tok))
     if response.success:
