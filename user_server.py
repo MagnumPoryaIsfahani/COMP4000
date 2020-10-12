@@ -32,18 +32,24 @@ class Users(users_pb2_grpc.UsersServicer):
 
         stored_hash = user["password"]
         is_valid_creditials = bcrypt.checkpw(password.encode(), stored_hash.encode())
-        if is_valid_creditials:
-            
-            
-            if not user.get("login_time"):
-                user["login_time"] = time.time()
-                user["token"] = secrets.token_urlsafe(8)
-            elif user.get("login_time",0)+500 > time.time() :
-                user["login_time"] = time.time()
-                print("token still valid")
-                
-            user_entries[username] = user
+        
+        if is_valid_creditials: 
+            print("valid creds")
+            if not user.get("login_time",False):
+                user["login_time"] = time.time() + 100
 
+                user["token"] = secrets.token_urlsafe(8)
+                print("new token")
+            elif user["login_time"] > time.time():
+                user["login_time"] = time.time()+100
+                print("login time updated")
+            else:
+                user["login_time"] = time.time()+100
+                user["token"] = secrets.token_urlsafe(8)
+                print("new valid token.")
+
+            user_entries[username] = user
+            json_db_file.close()
             self.WriteToDB(user_entries)
             
             return users_pb2.LoginUserReply(success=True, token=user["token"])
@@ -85,10 +91,6 @@ class Users(users_pb2_grpc.UsersServicer):
     def InvalidCredentialsError(self):
         return users_pb2.LoginUserReply(success=False, token="")
 
-    def GenerateAuthToken(self):
-        letters = string.ascii_letters
-        return ''.join(random.choice(letters) for i in range(16))
-
     def CreateUserAccount(self, request, context):  
 
         # Create a salt and using bcrypt, hash the user's credentials
@@ -120,6 +122,25 @@ class Users(users_pb2_grpc.UsersServicer):
 
         return users_pb2.CreateUserReply(success=True) 
 
+    def DeleteUserAccount(self,request,context):
+        if not os.path.exists("userDB.json"):
+            print("file not found")
+            return users_pb2.DeleteUserReply(success=False)
+        json_db_file = open("userDB.json","r+")
+        if os.stat("userDB.json").st_size == 0:
+            print("no users in file")
+            return users_pb2.DeleteUserReply(success=False)
+        user_entries = json.load(json_db_file)
+        if user_entries[request.username].get("token") == request.token and user_entries[request.username].get("login_time",0) > time.time():
+            del user_entries[request.username]
+            json_db_file.close()
+            self.WriteToDB(user_entries)
+            return users_pb2.DeleteUserReply(success=True)
+        
+        return users_pb2.DeleteUserReply(success=False)
+
+    
+
     def WriteToDB(self, user_entries):
         # This will erase everything that was in the json file and add the proper dictionary list of users
         new_json = open("userDB.json", "w")
@@ -128,7 +149,7 @@ class Users(users_pb2_grpc.UsersServicer):
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     users_pb2_grpc.add_UsersServicer_to_server(Users(), server)
-    server.add_insecure_port('[::]:50051')
+    server.add_insecure_port('[::]:10001')
     server.start()
     server.wait_for_termination()
 
