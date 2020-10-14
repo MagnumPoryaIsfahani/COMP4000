@@ -13,6 +13,9 @@ import string
 import time
 import secrets
 
+# how long the token will remain valid in seconds
+TOKEN_LIFETIME = 100 
+
 class Users(users_pb2_grpc.UsersServicer):
     def loginUserAccount(self, request, context):
         username, password = request.username, request.password
@@ -36,14 +39,14 @@ class Users(users_pb2_grpc.UsersServicer):
         if is_valid_creditials: 
             print("valid creds")
             if not user.get("login_time",False):
-                user["login_time"] = time.time() + 100
+                user["login_time"] = time.time() + TOKEN_LIFETIME
                 user["token"] = secrets.token_urlsafe(8)
                 print("new token")
             elif user["login_time"] > time.time():
-                user["login_time"] = time.time()+100
+                user["login_time"] = time.time() + TOKEN_LIFETIME
                 print("login time updated")
             else:
-                user["login_time"] = time.time()+100
+                user["login_time"] = time.time() + TOKEN_LIFETIME
                 user["token"] = secrets.token_urlsafe(8)
                 print("new valid token.")
 
@@ -71,7 +74,7 @@ class Users(users_pb2_grpc.UsersServicer):
         #There must be a better way to do this as this has a run time of O(n)... Maybe not important for now, we could just pass the username around everywhere in client if need be.
         for user in user_entries:
             if user_entries[user].get("token") == request.token:
-                if user_entries[user].get("login_time", 0)+300 > time.time():
+                if user_entries[user].get("login_time", 0) + TOKEN_LIFETIME > time.time():
                     #checks to see if new password is the same as old password
                     stored_hash = user_entries[user].get("password")
                     is_same_password = bcrypt.checkpw(request.password.encode(), stored_hash.encode())
@@ -136,7 +139,7 @@ class Users(users_pb2_grpc.UsersServicer):
             print("no users in file")
             return users_pb2.DeleteUserReply(success=False)
         user_entries = json.load(json_db_file)
-        if user_entries[request.username].get("token") == request.token and user_entries[request.username].get("login_time",0) > time.time():
+        if user_entries[request.username].get("token") == request.token and user_entries[request.username].get("login_time", 0) + TOKEN_LIFETIME > time.time():
             del user_entries[request.username]
             json_db_file.close()
             self.writeToDB(user_entries)

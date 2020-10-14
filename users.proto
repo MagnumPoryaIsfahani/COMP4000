@@ -10,7 +10,7 @@ service Users {
   // This function will allow a user to login to their account.
   rpc loginUserAccount (LoginUserRequest) returns (LoginUserReply) {}
 
-  rpc DeleteUserAccount (DeleteUserRequest) returns (DeleteUserReply) {}
+  rpc deleteUserAccount (DeleteUserRequest) returns (DeleteUserReply) {}
 
   // This function will allow a user to update their password.
   rpc updateUserAccount (UpdateUserRequest) returns (UpdateUserReply) {}
