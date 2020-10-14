@@ -15,13 +15,13 @@ class UsersStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.CreateUserAccount = channel.unary_unary(
-                '/users.Users/CreateUserAccount',
+        self.createUserAccount = channel.unary_unary(
+                '/users.Users/createUserAccount',
                 request_serializer=users__pb2.CreateUserRequest.SerializeToString,
                 response_deserializer=users__pb2.CreateUserReply.FromString,
                 )
-        self.LoginUserAccount = channel.unary_unary(
-                '/users.Users/LoginUserAccount',
+        self.loginUserAccount = channel.unary_unary(
+                '/users.Users/loginUserAccount',
                 request_serializer=users__pb2.LoginUserRequest.SerializeToString,
                 response_deserializer=users__pb2.LoginUserReply.FromString,
                 )
@@ -30,8 +30,8 @@ class UsersStub(object):
                 request_serializer=users__pb2.DeleteUserRequest.SerializeToString,
                 response_deserializer=users__pb2.DeleteUserReply.FromString,
                 )
-        self.UpdateUserAccount = channel.unary_unary(
-                '/users.Users/UpdateUserAccount',
+        self.updateUserAccount = channel.unary_unary(
+                '/users.Users/updateUserAccount',
                 request_serializer=users__pb2.UpdateUserRequest.SerializeToString,
                 response_deserializer=users__pb2.UpdateUserReply.FromString,
                 )
@@ -41,14 +41,14 @@ class UsersServicer(object):
     """The users service definition.
     """
 
-    def CreateUserAccount(self, request, context):
+    def createUserAccount(self, request, context):
         """This function will create a new user account for the user.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def LoginUserAccount(self, request, context):
+    def loginUserAccount(self, request, context):
         """This function will allow a user to login to their account.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -61,7 +61,7 @@ class UsersServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def UpdateUserAccount(self, request, context):
+    def updateUserAccount(self, request, context):
         """This function will allow a user to update their password.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -71,13 +71,13 @@ class UsersServicer(object):
 
 def add_UsersServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'CreateUserAccount': grpc.unary_unary_rpc_method_handler(
-                    servicer.CreateUserAccount,
+            'createUserAccount': grpc.unary_unary_rpc_method_handler(
+                    servicer.createUserAccount,
                     request_deserializer=users__pb2.CreateUserRequest.FromString,
                     response_serializer=users__pb2.CreateUserReply.SerializeToString,
             ),
-            'LoginUserAccount': grpc.unary_unary_rpc_method_handler(
-                    servicer.LoginUserAccount,
+            'loginUserAccount': grpc.unary_unary_rpc_method_handler(
+                    servicer.loginUserAccount,
                     request_deserializer=users__pb2.LoginUserRequest.FromString,
                     response_serializer=users__pb2.LoginUserReply.SerializeToString,
             ),
@@ -86,8 +86,8 @@ def add_UsersServicer_to_server(servicer, server):
                     request_deserializer=users__pb2.DeleteUserRequest.FromString,
                     response_serializer=users__pb2.DeleteUserReply.SerializeToString,
             ),
-            'UpdateUserAccount': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdateUserAccount,
+            'updateUserAccount': grpc.unary_unary_rpc_method_handler(
+                    servicer.updateUserAccount,
                     request_deserializer=users__pb2.UpdateUserRequest.FromString,
                     response_serializer=users__pb2.UpdateUserReply.SerializeToString,
             ),
@@ -103,7 +103,7 @@ class Users(object):
     """
 
     @staticmethod
-    def CreateUserAccount(request,
+    def createUserAccount(request,
             target,
             options=(),
             channel_credentials=None,
@@ -113,14 +113,14 @@ class Users(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/users.Users/CreateUserAccount',
+        return grpc.experimental.unary_unary(request, target, '/users.Users/createUserAccount',
             users__pb2.CreateUserRequest.SerializeToString,
             users__pb2.CreateUserReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def LoginUserAccount(request,
+    def loginUserAccount(request,
             target,
             options=(),
             channel_credentials=None,
@@ -130,7 +130,7 @@ class Users(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/users.Users/LoginUserAccount',
+        return grpc.experimental.unary_unary(request, target, '/users.Users/loginUserAccount',
             users__pb2.LoginUserRequest.SerializeToString,
             users__pb2.LoginUserReply.FromString,
             options, channel_credentials,
@@ -154,7 +154,7 @@ class Users(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def UpdateUserAccount(request,
+    def updateUserAccount(request,
             target,
             options=(),
             channel_credentials=None,
@@ -164,7 +164,7 @@ class Users(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/users.Users/UpdateUserAccount',
+        return grpc.experimental.unary_unary(request, target, '/users.Users/updateUserAccount',
             users__pb2.UpdateUserRequest.SerializeToString,
             users__pb2.UpdateUserReply.FromString,
             options, channel_credentials,

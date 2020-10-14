@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0busers.proto\x12\x05users\"M\n\x11\x43reateUserRequest\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\x12\x14\n\x0c\x63onfirmation\x18\x03 \x01(\t\"\"\n\x0f\x43reateUserReply\x12\x0f\n\x07success\x18\x01 \x01(\x08\"6\n\x10LoginUserRequest\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"0\n\x0eLoginUserReply\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\r\n\x05token\x18\x02 \x01(\t\"4\n\x11\x44\x65leteUserRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\x10\n\x08username\x18\x02 \x01(\t\"\"\n\x0f\x44\x65leteUserReply\x12\x0f\n\x07success\x18\x01 \x01(\x08\"4\n\x11UpdateUserRequest\x12\x10\n\x08password\x18\x01 \x01(\t\x12\r\n\x05token\x18\x02 \x01(\t\".\n\x0fUpdateUserReply\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\r\n\x05token\x18\x02 \x01(\t2\xa8\x02\n\x05Users\x12G\n\x11\x43reateUserAccount\x12\x18.users.CreateUserRequest\x1a\x16.users.CreateUserReply\"\x00\x12\x44\n\x10LoginUserAccount\x12\x17.users.LoginUserRequest\x1a\x15.users.LoginUserReply\"\x00\x12G\n\x11\x44\x65leteUserAccount\x12\x18.users.DeleteUserRequest\x1a\x16.users.DeleteUserReply\"\x00\x12G\n\x11UpdateUserAccount\x12\x18.users.UpdateUserRequest\x1a\x16.users.UpdateUserReply\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x0busers.proto\x12\x05users\"M\n\x11\x43reateUserRequest\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\x12\x14\n\x0c\x63onfirmation\x18\x03 \x01(\t\"\"\n\x0f\x43reateUserReply\x12\x0f\n\x07success\x18\x01 \x01(\x08\"6\n\x10LoginUserRequest\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"0\n\x0eLoginUserReply\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\r\n\x05token\x18\x02 \x01(\t\"4\n\x11\x44\x65leteUserRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\x10\n\x08username\x18\x02 \x01(\t\"\"\n\x0f\x44\x65leteUserReply\x12\x0f\n\x07success\x18\x01 \x01(\x08\"4\n\x11UpdateUserRequest\x12\x10\n\x08password\x18\x01 \x01(\t\x12\r\n\x05token\x18\x02 \x01(\t\".\n\x0fUpdateUserReply\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\r\n\x05token\x18\x02 \x01(\t2\xa8\x02\n\x05Users\x12G\n\x11\x63reateUserAccount\x12\x18.users.CreateUserRequest\x1a\x16.users.CreateUserReply\"\x00\x12\x44\n\x10loginUserAccount\x12\x17.users.LoginUserRequest\x1a\x15.users.LoginUserReply\"\x00\x12G\n\x11\x44\x65leteUserAccount\x12\x18.users.DeleteUserRequest\x1a\x16.users.DeleteUserReply\"\x00\x12G\n\x11updateUserAccount\x12\x18.users.UpdateUserRequest\x1a\x16.users.UpdateUserReply\"\x00\x62\x06proto3'
 )
 
 
@@ -408,8 +408,8 @@ _USERS = _descriptor.ServiceDescriptor(
   serialized_end=732,
   methods=[
   _descriptor.MethodDescriptor(
-    name='CreateUserAccount',
-    full_name='users.Users.CreateUserAccount',
+    name='createUserAccount',
+    full_name='users.Users.createUserAccount',
     index=0,
     containing_service=None,
     input_type=_CREATEUSERREQUEST,
@@ -418,8 +418,8 @@ _USERS = _descriptor.ServiceDescriptor(
     create_key=_descriptor._internal_create_key,
   ),
   _descriptor.MethodDescriptor(
-    name='LoginUserAccount',
-    full_name='users.Users.LoginUserAccount',
+    name='loginUserAccount',
+    full_name='users.Users.loginUserAccount',
     index=1,
     containing_service=None,
     input_type=_LOGINUSERREQUEST,
@@ -438,8 +438,8 @@ _USERS = _descriptor.ServiceDescriptor(
     create_key=_descriptor._internal_create_key,
   ),
   _descriptor.MethodDescriptor(
-    name='UpdateUserAccount',
-    full_name='users.Users.UpdateUserAccount',
+    name='updateUserAccount',
+    full_name='users.Users.updateUserAccount',
     index=3,
     containing_service=None,
     input_type=_UPDATEUSERREQUEST,
