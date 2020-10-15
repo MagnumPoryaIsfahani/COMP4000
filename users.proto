@@ -5,15 +5,15 @@ package users;
 service Users {
 
   // This function will create a new user account for the user.
-  rpc CreateUserAccount (CreateUserRequest) returns (CreateUserReply) {}
+  rpc createUserAccount (CreateUserRequest) returns (CreateUserReply) {}
   
   // This function will allow a user to login to their account.
-  rpc LoginUserAccount (LoginUserRequest) returns (LoginUserReply) {}
+  rpc loginUserAccount (LoginUserRequest) returns (LoginUserReply) {}
 
-  rpc DeleteUserAccount (DeleteUserRequest) returns (DeleteUserReply) {}
+  rpc deleteUserAccount (DeleteUserRequest) returns (DeleteUserReply) {}
 
   // This function will allow a user to update their password.
-  rpc UpdateUserAccount (UpdateUserRequest) returns (UpdateUserReply) {}
+  rpc updateUserAccount (UpdateUserRequest) returns (UpdateUserReply) {}
 }
 
 // Define a message describing a single user
