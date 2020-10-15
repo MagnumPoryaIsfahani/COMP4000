@@ -14,7 +14,7 @@ import time
 import secrets
 
 # how long the token will remain valid in seconds
-TOKEN_LIFETIME = 100 
+TOKEN_LIFETIME = 30
 
 class Users(users_pb2_grpc.UsersServicer):
     def loginUserAccount(self, request, context):

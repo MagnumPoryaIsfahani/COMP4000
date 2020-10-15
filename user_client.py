@@ -40,7 +40,7 @@ def deleteUser(stub, uname, tok):
         menuSelect(stub)
     else:
         print("your Account has not been removed.")
-        userSelection(stub,uname,tok)
+        menuSelect(stub)
 
 def userUpdate(stub, token):
     new_password =  getpass.getpass("Enter a new password for your account: ")
@@ -93,7 +93,6 @@ def userSelection(stub, username, token):
     menuSelection = input("You are now logged in.\n1 to Update Password\n2 to Delete Account\n'q' to Quit\n")
     while menuSelection != '1' and menuSelection != '2' and menuSelection != 'q':
         menuSelection = input("Incorrect input.\n1 to Update Password\n2 to Delete Account\n'q' to Quit\n")
-    print(menuSelection)
     if menuSelection == 'q':
         print("Goodbye")
         exit()
