@@ -20,140 +20,134 @@ class Users(users_pb2_grpc.UsersServicer):
     def loginUserAccount(self, request, context):
         username, password = request.username, request.password
 
-        # if db doesn't exist, return false
-        if not os.path.exists("userDB.json"):
+        # get user from DB
+        try:
+            user = self.fetchUserFromDB(username)
+        except:
             return users_pb2.LoginUserReply(success=False)
-
-        # check if there is matching user
-        json_db_file = open("userDB.json", "r+")
-        user_entries = json.load(json_db_file)
-        user = user_entries.get(username)
-
-        # user doesn't exist
-        if not user:
-            return self.invalidCredentialsError()
 
         stored_hash = user["password"]
         is_valid_creditials = bcrypt.checkpw(password.encode(), stored_hash.encode())
         
-        if is_valid_creditials: 
-            print("valid creds")
-            if not user.get("login_time",False):
-                user["login_time"] = time.time() + TOKEN_LIFETIME
-                user["token"] = secrets.token_urlsafe(8)
-                print("new token")
-            elif user["login_time"] > time.time():
-                user["login_time"] = time.time() + TOKEN_LIFETIME
-                print("login time updated")
-            else:
-                user["login_time"] = time.time() + TOKEN_LIFETIME
-                user["token"] = secrets.token_urlsafe(8)
-                print("new valid token.")
+        # invalid password
+        if not is_valid_creditials:
+            return users_pb2.LoginUserReply(success=False)
 
-            user_entries[username] = user
-            json_db_file.close()
-            self.writeToDB(user_entries)
-            
-            return users_pb2.LoginUserReply(success=True, token=user["token"])
+        # logging in
+        print("valid creds")
+        if not user.get("login_time", False):
+            user["token"] = secrets.token_urlsafe(8)
+            print("first token issued")
+        elif user["login_time"] + TOKEN_LIFETIME < time.time():
+            user["token"] = secrets.token_urlsafe(8)
+            print("token expired, new one issued")
         
-        return self.invalidCredentialsError()
+        user["login_time"] = time.time() + TOKEN_LIFETIME
+        print("login time updated")
+
+        self.saveUserToDB(user, username)
+        
+        return users_pb2.LoginUserReply(success=True, token=user["token"])
+
 
     def updateUserAccount(self, request, context):
-        #Checks if db exists and if its empty, returns 404 if not found/empty
-        if not os.path.exists("userDB.json"):
-            return users_pb2.UpdateUserReply(code=404, token=request.token)
+        username = request.username
 
-        json_db_file = open("userDB.json", "r+")
+        # checks if db exists and if its empty, returns 404 if not found/empty
+        try:
+            user = self.fetchUserFromDB(username)
+        except:
+            return users_pb2.UpdateUserReply(code=404)
 
-        if os.stat("userDB.json").st_size == 0:
-            return users_pb2.UpdateUserReply(code=404, token=request.token)
+        # check that token is valid
+        if user.get("token") != request.token:
+            return users_pb2.UpdateUserReply(code=401)
 
-        user_entries = json.load(json_db_file)
+        # check if token has expired
+        if user.get("login_time", 0) + TOKEN_LIFETIME < time.time():
+            return users_pb2.UpdateUserReply(code=408)
+        
+        # checks to see if new password is the same as old password
+        stored_hash = user.get("password")
+        is_same_password = bcrypt.checkpw(request.password.encode(), stored_hash.encode())
+        if is_same_password:
+            return users_pb2.UpdateUserReply(code=405)
 
-        #finds the user to update
-        #There must be a better way to do this as this has a run time of O(n)... Maybe not important for now, we could just pass the username around everywhere in client if need be.
-        for user in user_entries:
-            if user_entries[user].get("token") == request.token:
-                if user_entries[user].get("login_time", 0) + TOKEN_LIFETIME > time.time():
-                    #checks to see if new password is the same as old password
-                    stored_hash = user_entries[user].get("password")
-                    is_same_password = bcrypt.checkpw(request.password.encode(), stored_hash.encode())
+        # hashes the new password and invalidates existing token by setting login_time to 0
+        hashed_binary = bcrypt.hashpw(request.password.encode(), bcrypt.gensalt())
+        password = hashed_binary.decode(encoding="utf-8")
+        updatedUser = {"password": password, "login_time": 0}
 
-                    if is_same_password:
-                        return users_pb2.UpdateUserReply(code=405, token=request.token)
+        #throw the updated account into the temp dictionary
+        self.saveUserToDB(updatedUser, username)
 
-                    #hashes the new password
-                    hashed_binary = bcrypt.hashpw(request.password.encode(), bcrypt.gensalt())
-                    password = hashed_binary.decode(encoding="utf-8")
-                    updatedPassword = {"password": password}
+        return users_pb2.UpdateUserReply(code=200)
+                
 
-                    #throw the updated account into the temp dictionary
-                    user_entries[user].update(updatedPassword)
-                    json_db_file.close()
-
-                    #update the DB with the temp dictionary
-                    self.writeToDB(user_entries)
-                    return users_pb2.UpdateUserReply(code=200, token=request.token)
-                else:
-                    return users_pb2.UpdateUserReply(code=408 , token=request.token)
-
-        return users_pb2.UpdateUserReply(code=401 , token=request.token)
 
     def createUserAccount(self, request, context):  
-
         # Create a salt and using bcrypt, hash the user's credentials
         hashed_binary = bcrypt.hashpw(request.password.encode(), bcrypt.gensalt())
         password = hashed_binary.decode(encoding="utf-8")
         username = request.username
-        
-        # Check if file exists, if it doesnt create a new one and allow it to be readable/writable
-        if os.path.exists("userDB.json"):
-            json_db_file = open("userDB.json", "r+") 
-        else:
-            json_db_file = open("userDB.json", "w+") 
 
-        # If file size is 0, it means its empty and we can fill it up
-        if os.stat("userDB.json").st_size == 0:
-            # Create dictioanry of users
-            user_entries = {}
-            user_entries[username] = {"password":password}     
-        else:
-            # Load json file and append new user to the end 
-            user_entries = json.load(json_db_file)
-            # Check to see if the username the user gave already exists as a key in the dictionary 
-            if username in user_entries:
-                return users_pb2.CreateUserReply(success=False)
-            else:
-                user_entries[username] = {"password": password}
-
-        self.writeToDB(user_entries)
-
-        return users_pb2.CreateUserReply(success=True) 
+        try:
+            self.fetchUserFromDB(username)
+            return users_pb2.CreateUserReply(success=False)
+        except:
+            # creating account
+            self.saveUserToDB({'password': password}, username)
+            return users_pb2.CreateUserReply(success=True) 
 
     def deleteUserAccount(self,request,context):
-        if not os.path.exists("userDB.json"):
-            print("file not found")
+        username = request.username
+        try:
+            user = self.fetchUserFromDB(username)
+        except:
             return users_pb2.DeleteUserReply(success=False)
-        json_db_file = open("userDB.json","r+")
-        if os.stat("userDB.json").st_size == 0:
-            print("no users in file")
-            return users_pb2.DeleteUserReply(success=False)
-        user_entries = json.load(json_db_file)
-        if user_entries[request.username].get("token") == request.token and user_entries[request.username].get("login_time", 0) + TOKEN_LIFETIME > time.time():
-            del user_entries[request.username]
-            json_db_file.close()
-            self.writeToDB(user_entries)
+
+        if user and user.get("token") == request.token and time.time() < user.get("login_time", 0) + TOKEN_LIFETIME:
+            self.saveUserToDB(None, username)
             return users_pb2.DeleteUserReply(success=True)
         
         return users_pb2.DeleteUserReply(success=False)
-    
-    def invalidCredentialsError(self):
-        return users_pb2.LoginUserReply(success=False, token="")
+        
 
-    def writeToDB(self, user_entries):
-        # This will erase everything that was in the json file and add the proper dictionary list of users
-        new_json = open("userDB.json", "w")
-        json.dump(user_entries, new_json)
+    def saveUserToDB(self, user, username):
+        # initialize db if its empty
+        if os.stat("userDB.json").st_size == 0:
+            user_entries = {}
+        else:
+            read_file = open("userDB.json", "r+")
+            user_entries = json.load(read_file)
+            read_file.close()
+
+        if user:
+            user_entries[username] = user
+        else:
+            user_entries.pop(username, None)
+
+        write_file = open("userDB.json", 'w+')
+        json.dump(user_entries, write_file)
+        write_file.close()
+
+
+    def fetchUserFromDB(self, username):
+        # error if db doesn't exist or is empty
+        if not os.path.exists("userDB.json") or os.stat("userDB.json").st_size == 0:
+            raise Exception()
+
+        # check if there is matching user
+        db_file = open("userDB.json", "r+")
+        user_entries = json.load(db_file)
+        user = user_entries.get(username)
+        db_file.close()
+
+        # error if user doesn't exist
+        if not user:
+            raise Exception()
+
+        return user
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

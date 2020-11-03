@@ -53,10 +53,9 @@ message DeleteUserReply {
 message UpdateUserRequest {
   string password = 1;
   string token = 2;
+  string username = 3;
 }
 
 message UpdateUserReply {
   int32 code = 1;
-  string token = 2;
 }
-
