@@ -7,6 +7,11 @@ import users_pb2
 import users_pb2_grpc
 import sys
 import getpass
+from passthrough import Passthrough
+from fuse import FUSE, FuseOSError, Operations
+
+
+REMOTE_DIRECTORY = "/home/student/COMP4000"
 
 # This method registers a new user 
 def registerUser(stub):
@@ -88,8 +93,10 @@ Please choose an operation: """)
             deleteUser(stub, username, token)
         elif operation == '3':
             mountpoint = input('Enter the mountpoint: ')
-            print(mountpoint)
-            input('Press enter to unmount... ')
+            print("[ctrl+c] to unmount")
+            FUSE(Passthrough(REMOTE_DIRECTORY, stub), mountpoint, nothreads=True, foreground=True)
+            print('Filesystem was unmounted...\n')
+            continue
         elif operation != 'q':
             print('Error: invalid input.')
             continue

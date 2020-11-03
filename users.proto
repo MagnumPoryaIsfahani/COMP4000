@@ -14,6 +14,14 @@ service Users {
 
   // This function will allow a user to update their password.
   rpc updateUserAccount (UpdateUserRequest) returns (UpdateUserReply) {}
+
+  // filesystem methods
+  rpc fsGetAttr (GetAttrRequest) returns (GetAttrReponse) {}
+  // rpc fsReadDir () returns () {}
+  
+  // file methods
+  // rpc fileOpen () returns () {}
+  // rpc fileRead () returns () {}
 }
 
 // Define a message describing a single user
@@ -58,4 +66,13 @@ message UpdateUserRequest {
 
 message UpdateUserReply {
   int32 code = 1;
+}
+
+message GetAttrRequest {
+  string path = 1;
+  string fh = 2;
+}
+
+message GetAttrReponse {
+  string data = 1;
 }

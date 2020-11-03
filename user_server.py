@@ -49,7 +49,6 @@ class Users(users_pb2_grpc.UsersServicer):
         
         return users_pb2.LoginUserReply(success=True, token=user["token"])
 
-
     def updateUserAccount(self, request, context):
         username = request.username
 
@@ -83,8 +82,6 @@ class Users(users_pb2_grpc.UsersServicer):
 
         return users_pb2.UpdateUserReply(code=200)
                 
-
-
     def createUserAccount(self, request, context):  
         # Create a salt and using bcrypt, hash the user's credentials
         hashed_binary = bcrypt.hashpw(request.password.encode(), bcrypt.gensalt())
@@ -99,7 +96,7 @@ class Users(users_pb2_grpc.UsersServicer):
             self.saveUserToDB({'password': password}, username)
             return users_pb2.CreateUserReply(success=True) 
 
-    def deleteUserAccount(self,request,context):
+    def deleteUserAccount(self, request, context):
         username = request.username
         try:
             user = self.fetchUserFromDB(username)
@@ -111,7 +108,12 @@ class Users(users_pb2_grpc.UsersServicer):
             return users_pb2.DeleteUserReply(success=True)
         
         return users_pb2.DeleteUserReply(success=False)
-        
+
+    def fsGetAttr(self, request, context):
+        st = os.lstat(request.path)
+        data = dict((key, getattr(st, key)) for key in ('st_atime', 'st_ctime',
+                     'st_gid', 'st_mode', 'st_mtime', 'st_nlink', 'st_size', 'st_uid'))
+        return users_pb2.GetAttrReponse(data=json.dumps(data))
 
     def saveUserToDB(self, user, username):
         # initialize db if its empty
@@ -130,7 +132,6 @@ class Users(users_pb2_grpc.UsersServicer):
         write_file = open("userDB.json", 'w+')
         json.dump(user_entries, write_file)
         write_file.close()
-
 
     def fetchUserFromDB(self, username):
         # error if db doesn't exist or is empty
