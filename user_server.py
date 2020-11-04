@@ -115,6 +115,23 @@ class Users(users_pb2_grpc.UsersServicer):
                      'st_gid', 'st_mode', 'st_mtime', 'st_nlink', 'st_size', 'st_uid'))
         return users_pb2.GetAttrReponse(data=json.dumps(data))
 
+    def fsReadDir(self, request, context):
+        st = os.lstat(request.path)
+
+        dirents = ['.', '..']
+        if os.path.isdir(st):
+            dirents.extend(os.listdir(st))
+        for r in dirents:
+            yield r
+        return users_pb2.getReadDirResponse(data="test")
+
+    def fsStat(self, request, context):
+        stv = os.statvfs(request.path)
+        data = dict((key, getattr(stv, key)) for key in ('f_bavail', 'f_bfree',
+            'f_blocks', 'f_bsize', 'f_favail', 'f_ffree', 'f_files', 'f_flag',
+            'f_frsize', 'f_namemax'))
+        return users_pb2.GetStatResponse(data=json.dumps(data))
+
     def saveUserToDB(self, user, username):
         # initialize db if its empty
         if os.stat("userDB.json").st_size == 0:
