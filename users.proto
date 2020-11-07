@@ -93,3 +93,4 @@ message GetStatRequest {
 message GetStatResponse {
   string data = 1;
 }
+

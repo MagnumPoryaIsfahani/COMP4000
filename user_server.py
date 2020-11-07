@@ -5,6 +5,7 @@ import os
 
 import users_pb2
 import users_pb2_grpc
+import status_codes
 
 import json
 import bcrypt
@@ -56,21 +57,21 @@ class Users(users_pb2_grpc.UsersServicer):
         try:
             user = self.fetchUserFromDB(username)
         except:
-            return users_pb2.UpdateUserReply(code=404)
+            return users_pb2.UpdateUserReply(code=status_codes.NOT_FOUND)
 
         # check that token is valid
         if user.get("token") != request.token:
-            return users_pb2.UpdateUserReply(code=401)
+            return users_pb2.UpdateUserReply(code=status_codes.UNAUTHENTICATED)
 
         # check if token has expired
         if user.get("login_time", 0) + TOKEN_LIFETIME < time.time():
-            return users_pb2.UpdateUserReply(code=408)
+            return users_pb2.UpdateUserReply(code=status_codes.DEADLINE_EXCEEDED)
         
         # checks to see if new password is the same as old password
         stored_hash = user.get("password")
         is_same_password = bcrypt.checkpw(request.password.encode(), stored_hash.encode())
         if is_same_password:
-            return users_pb2.UpdateUserReply(code=405)
+            return users_pb2.UpdateUserReply(code=status_codes.ALREADY_EXISTS)
 
         # hashes the new password and invalidates existing token by setting login_time to 0
         hashed_binary = bcrypt.hashpw(request.password.encode(), bcrypt.gensalt())
@@ -80,7 +81,7 @@ class Users(users_pb2_grpc.UsersServicer):
         #throw the updated account into the temp dictionary
         self.saveUserToDB(updatedUser, username)
 
-        return users_pb2.UpdateUserReply(code=200)
+        return users_pb2.UpdateUserReply(code=status_codes.OK)
                 
     def createUserAccount(self, request, context):  
         # Create a salt and using bcrypt, hash the user's credentials
