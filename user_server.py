@@ -116,14 +116,12 @@ class Users(users_pb2_grpc.UsersServicer):
         return users_pb2.GetAttrReponse(data=json.dumps(data))
 
     def fsReadDir(self, request, context):
-        st = os.lstat(request.path)
-
         dirents = ['.', '..']
-        if os.path.isdir(st):
-            dirents.extend(os.listdir(st))
-        for r in dirents:
-            yield r
-        return users_pb2.getReadDirResponse(data="test")
+        
+        if os.path.isdir(request.path):
+            dirents.extend(os.listdir(request.path))
+        
+        return users_pb2.GetReadDirResponse(data=json.dumps(dirents))
 
     def fsStat(self, request, context):
         stv = os.statvfs(request.path)
@@ -134,7 +132,7 @@ class Users(users_pb2_grpc.UsersServicer):
 
     def saveUserToDB(self, user, username):
         # initialize db if its empty
-        if os.stat("userDB.json").st_size == 0:
+        if not os.path.exists("userDB.json") or os.stat("userDB.json").st_size == 0:
             user_entries = {}
         else:
             read_file = open("userDB.json", "r+")
