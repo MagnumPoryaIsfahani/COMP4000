@@ -116,6 +116,14 @@ class Users(users_pb2_grpc.UsersServicer):
                      'st_gid', 'st_mode', 'st_mtime', 'st_nlink', 'st_size', 'st_uid'))
         return users_pb2.GetAttrReponse(data=json.dumps(data))
 
+    def fsReadDir(self, request, context):
+        dirents = ['.', '..']
+        
+        if os.path.isdir(request.path):
+            dirents.extend(os.listdir(request.path))
+        
+        return users_pb2.ReadDirResponse(data=json.dumps(dirents))
+
     def saveUserToDB(self, user, username):
         # initialize db if its empty
         if not os.path.exists("userDB.json") or os.stat("userDB.json").st_size == 0:

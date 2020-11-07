@@ -50,17 +50,16 @@ class Passthrough(Operations):
         path = self._full_path(path)
         response = self.stub.fsGetAttr(users_pb2.GetAttrRequest(path=path, fh=fh))
         
-        print("DATA", response.data)
+        # print("DATA", response.data)
 
         return json.loads(response.data)
 
     def readdir(self, path, fh):
         if IS_DEBUG: print("[readdir]", path, fh)
-        full_path = self._full_path(path)
+        path = self._full_path(path)
+        response = self.stub.fsReadDir(users_pb2.ReadDirRequest(path=path))
+        dirents = json.loads(response.data)
 
-        dirents = ['.', '..']
-        if os.path.isdir(full_path):
-            dirents.extend(os.listdir(full_path))
         for r in dirents:
             yield r
 

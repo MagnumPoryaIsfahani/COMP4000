@@ -11,7 +11,7 @@ import users_pb2_grpc
 import status_codes
 from passthrough import Passthrough
 
-REMOTE_DIRECTORY = "/home/student/COMP4000"
+REMOTE_DIRECTORY = "/home/az/COMP4000"
 
 # This method registers a new user 
 def registerUser(stub):

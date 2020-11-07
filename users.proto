@@ -17,7 +17,7 @@ service Users {
 
   // filesystem methods
   rpc fsGetAttr (GetAttrRequest) returns (GetAttrReponse) {}
-  // rpc fsReadDir () returns () {}
+  rpc fsReadDir (ReadDirRequest) returns (ReadDirResponse) {}
   
   // file methods
   // rpc fileOpen () returns () {}
@@ -74,5 +74,13 @@ message GetAttrRequest {
 }
 
 message GetAttrReponse {
+  string data = 1;
+}
+
+message ReadDirRequest {
+  string path = 1;
+}
+
+message ReadDirResponse {
   string data = 1;
 }
