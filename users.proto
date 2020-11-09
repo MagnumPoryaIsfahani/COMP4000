@@ -19,6 +19,13 @@ service Users {
   rpc fsGetAttr (GetAttrRequest) returns (GetAttrReponse) {}
   rpc fsReadDir (GetReadDirRequest) returns (GetReadDirResponse) {}
   rpc fsStat (GetStatRequest) returns (GetStatResponse) {}
+  rpc fsRead (GetReadRequest) returns (GetReadResponse) {}
+  rpc fsWrite (GetWriteRequest) returns (GetReadResponse) {}
+  rpc fsRelease (GetReleaseRequest) returns (GetReleaseResponse) {}
+  rpc fsFlush (GetFlushRequest) returns (GetFlushResponse) {}
+  rpc fsOpen (GetOpenRequest) returns (GetOpenResponse) {}
+  rpc fsCreate (GetCreateRequest) returns (GetCreateResponse) {}
+  rpc fsAccess (GetAccessRequest) returns (GetCreateResponse) {}
   // file methods
   // rpc fileOpen () returns () {}
   // rpc fileRead () returns () {}
@@ -91,5 +98,73 @@ message GetStatRequest {
 }
 
 message GetStatResponse {
+  string data = 1;
+}
+
+message GetReadRequest{
+  string path = 1;
+  int32 length = 2;
+  int32 offset = 3;
+  bytes fh = 4;
+}
+
+message GetReadResponse{
+  bytes data = 1;
+}
+
+message GetWriteRequest{
+  string path = 1;
+  string buf = 2;
+  int32 offset = 3;
+  bytes fh = 4;
+}
+
+message GetWriteResponse{
+  bytes data = 1;
+}
+
+message GetReleaseRequest{
+  string path = 1;
+  int32 fh = 2;
+}
+
+message GetReleaseResponse{
+  string data = 1;
+}
+
+message GetFlushRequest{
+  string path = 1;
+  int32 fh = 2;
+}
+
+message GetFlushResponse{
+  string data = 1;
+}
+
+message GetOpenRequest{
+  string path = 1;
+  int32 flags = 2;
+}
+
+message GetOpenResponse{
+  string data = 1;
+}
+
+message GetCreateRequest{
+  string path = 1;
+  string mode = 2;
+  string fi = 3;
+}
+
+message GetCreateResponse{
+  string data = 1;
+}
+
+message GetAccessRequest{
+  string path = 1;
+  int32 mode = 2;
+}
+
+message GetAccessResponse{
   string data = 1;
 }

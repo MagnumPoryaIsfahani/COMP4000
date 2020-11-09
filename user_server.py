@@ -130,6 +130,38 @@ class Users(users_pb2_grpc.UsersServicer):
             'f_frsize', 'f_namemax'))
         return users_pb2.GetStatResponse(data=json.dumps(data))
 
+    def fsOpen(self, request, context):
+        data = os.open(request.path, request.flags)
+        return users_pb2.GetOpenResponse(data=json.dumps(data))
+
+
+    def fsRead(self, request, context):
+        os.lseek(request.fh, request.offset, os.SEEK_SET)
+        data = os.read(request.fh, request.length)
+        return users_pb2.GetReadResponse(data=data)
+
+    def fsWrite(self, request, context):
+        os.lseek(request.fh, request.offset, os.SEEK_SET)
+        return users_pb2.GetReadResponse(data=os.write(request.fh, request.buf))
+
+    def fsCreate(self, request, context):
+        data = os.open(request.path, os.O_WRONLY | os.O_CREAT, request.mode)
+
+        return users_pb2.GetCreateResponse(data=data)
+
+    def fsRelease(self, request, context):
+        return users_pb2.GetReleaseResponse(data=json.dumps(os.close(request.fh)))
+
+    def fsFlush(self, request, context):
+        return users_pb2.GetFlushResponse(data=json.dumps(os.fsync(request.fh)))
+
+    def fsAccess(self, request, context):
+        if not os.access(request.path, request.mode):
+            data = FuseOSError(errno.EACCES)
+            return users_pb2.GetAccessResponse(data=data)
+        return users_pb2.GetAccessResponse()
+        
+
     def saveUserToDB(self, user, username):
         # initialize db if its empty
         if not os.path.exists("userDB.json") or os.stat("userDB.json").st_size == 0:

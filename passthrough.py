@@ -30,9 +30,12 @@ class Passthrough(Operations):
     # ==================
 
     def access(self, path, mode):
-        if IS_DEBUG: print("[access]")
-        full_path = self._full_path(path)
-        if not os.access(full_path, mode):
+        if IS_DEBUG: print("[access]", path, mode)
+        path = self._full_path(path)
+
+        response = self.stub.fsAccess(users_pb2.GetAccessRequest(path=path, mode=mode))
+
+        if response.data:
             raise FuseOSError(errno.EACCES)
 
     def chmod(self, path, mode):
@@ -50,7 +53,7 @@ class Passthrough(Operations):
         path = self._full_path(path)
         response = self.stub.fsGetAttr(users_pb2.GetAttrRequest(path=path, fh=fh))
         
-        print("DATA", response.data)
+        print("ATTR DATA", response.data)
 
         return json.loads(response.data)
 
@@ -86,10 +89,12 @@ class Passthrough(Operations):
         return os.mkdir(self._full_path(path), mode)
 
     def statfs(self, path):
-        if IS_DEBUG: print("[statfs]")
+        if IS_DEBUG: print("[statfs]", path)
         full_path = self._full_path(path)
         response = self.stub.fsStat(users_pb2.GetStatRequest(path=path))
         
+        print("STAT DATA", response.data)
+
         return json.loads(response.data)
 
 
@@ -118,23 +123,26 @@ class Passthrough(Operations):
 
     def open(self, path, flags):
         if IS_DEBUG: print("[open]", path, flags)
-        full_path = self._full_path(path)
-        return os.open(full_path, flags)
+        path = self._full_path(path)
+        response = self.stub.fsOpen(users_pb2.GetOpenRequest(path=path, flags=flags))
+        return json.loads(response.data)
 
     def create(self, path, mode, fi=None):
         if IS_DEBUG: print("[create]")
         full_path = self._full_path(path)
-        return os.open(full_path, os.O_WRONLY | os.O_CREAT, mode)
-
+        response = self.stubfsCreate(users_pb2.GetCreateRequest(path=path, mode=mode, fi=fi))
+        
+        return response.data
+        
     def read(self, path, length, offset, fh):
         if IS_DEBUG: print("[read]", path, length, offset, fh)
-        os.lseek(fh, offset, os.SEEK_SET)
-        return "beep beep"
+        response = self.stub.fsRead(users_pb2.GetReadRequest(path=path, length=length, offset=offset, fh=fh))
+        return response.data
 
     def write(self, path, buf, offset, fh):
-        if IS_DEBUG: print("[write]")
-        os.lseek(fh, offset, os.SEEK_SET)
-        return os.write(fh, buf)
+        if IS_DEBUG: print("[write]", path, buf, offset, fh)
+        response = self.stub.fsRead(users_pb2.GetWriteRequest(path=path, buf=buf, offset=offset, fh=fh))
+        return response.data
 
     def truncate(self, path, length, fh=None):
         if IS_DEBUG: print("[truncate]")
@@ -144,11 +152,13 @@ class Passthrough(Operations):
 
     def flush(self, path, fh):
         if IS_DEBUG: print("[flush]")
-        return os.fsync(fh)
+        response = self.stub.fsFlush(users_pb2.GetFlushRequest(path=path, fh=fh))
+        return json.loads(response.data)
 
     def release(self, path, fh):
         if IS_DEBUG: print("[release]")
-        return os.close(fh)
+        response = self.stub.fsRelease(users_pb2.GetReleaseRequest(path=path, fh=fh))
+        return json.loads(response.data)
 
     def fsync(self, path, fdatasync, fh):
         if IS_DEBUG: print("[fsync]")
