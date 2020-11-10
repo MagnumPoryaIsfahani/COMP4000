@@ -1,15 +1,15 @@
 from __future__ import print_function
-import logging
 
+import getpass
+import logging
+import sys
 import grpc
+from fuse import FUSE, FuseOSError, Operations
 
 import users_pb2
 import users_pb2_grpc
-import sys
-import getpass
+import status_codes
 from passthrough import Passthrough
-from fuse import FUSE, FuseOSError, Operations
-
 
 REMOTE_DIRECTORY = "/home/student/COMP4000"
 
@@ -59,16 +59,16 @@ def updateUser(stub, username, token):
 
         response = stub.updateUserAccount(users_pb2.UpdateUserRequest(password=new_password, token=token, username=username))
 
-        if response.code == 200:
+        if response.code == status_codes.OK:
             print("\nPassword updated!")
-        elif response.code == 401:
+        elif response.code == status_codes.UNAUTHENTICATED:
             print("\nError: unauthorized. Token is invalid.")
-        elif response.code == 405:
+        elif response.code == status_codes.ALREADY_EXISTS:
             print("\nError: new password must differ from old password.")
             continue
-        elif response.code == 408:
+        elif response.code == status_codes.DEADLINE_EXCEEDED:
             print("\nError: login timed out...")
-        elif response.code == 404:
+        elif response.code == status_codes.NOT_FOUND:
             print("\nError: database not found.")
         else:
             print("Unknown Error.")
