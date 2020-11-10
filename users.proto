@@ -15,6 +15,9 @@ service Users {
   // This function will allow a user to update their password.
   rpc updateUserAccount (UpdateUserRequest) returns (UpdateUserReply) {}
 
+  // returns file structure
+  rpc displayTree (DisplayTreeRequest) returns (DisplayTreeReply) {}
+
   // filesystem methods
   rpc fsAccess (AccessRequest) returns (JsonReply) {}
   rpc fsGetAttr (GetAttrRequest) returns (JsonReply) {}
@@ -74,6 +77,15 @@ message UpdateUserRequest {
 
 message UpdateUserReply {
   int32 code = 1;
+}
+
+// Display file structure
+message DisplayTreeRequest {
+  string path = 1;
+}
+
+message DisplayTreeReply {
+  string tree = 1;
 }
 
 // Generic JSON reply
