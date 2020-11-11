@@ -119,7 +119,7 @@ class Passthrough(Operations):
 
     def utimens(self, path, times=None):
         if IS_DEBUG: print("[utimens]")
-        return os.utime(self._full_path(path), times)
+        return self.stub.fsUtimens(users_pb2.UltimensRequest(path=self._full_path(path)))
 
     # File methods
     # ============

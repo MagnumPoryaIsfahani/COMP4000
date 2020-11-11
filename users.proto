@@ -25,6 +25,7 @@ service Users {
   rpc fsMkDir (MkDirRequest) returns (JsonReply) {}
   rpc fsStat (StatRequest) returns (JsonReply) {}
   rpc fsUnlink (UnlinkRequest) returns (JsonReply) {}
+  rpc fsUtimens (UltimensRequest) returns (JsonReply) {}
   
   // file methods
   rpc fileOpen (OpenRequest) returns (JsonReply) {}
@@ -115,6 +116,9 @@ message StatRequest {
   string path = 1;
 }
 message UnlinkRequest {
+  string path = 1;
+}
+message UltimensRequest {
   string path = 1;
 }
 

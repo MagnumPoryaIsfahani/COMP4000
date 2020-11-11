@@ -152,6 +152,10 @@ class Users(users_pb2_grpc.UsersServicer):
             'f_frsize', 'f_namemax'))
         return users_pb2.JsonReply(data=json.dumps(data))
 
+    def fsUtimens(self, request, context):
+        data = os.utime(request.path, request.times)
+        return users_pb2.JsonReply(data=json.dumps(data))
+
     def fsUnlink(self, request, context):
         data = os.unlink(request.path)
         return users_pb2.JsonReply(data=json.dumps(data))
