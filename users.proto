@@ -15,13 +15,25 @@ service Users {
   // This function will allow a user to update their password.
   rpc updateUserAccount (UpdateUserRequest) returns (UpdateUserReply) {}
 
+  // returns file structure
+  rpc displayTree (DisplayTreeRequest) returns (DisplayTreeReply) {}
+
   // filesystem methods
-  rpc fsGetAttr (GetAttrRequest) returns (GetAttrReponse) {}
-  // rpc fsReadDir () returns () {}
+  rpc fsAccess (AccessRequest) returns (JsonReply) {}
+  rpc fsGetAttr (GetAttrRequest) returns (JsonReply) {}
+  rpc fsReadDir (ReadDirRequest) returns (JsonReply) {}
+  rpc fsMkDir (MkDirRequest) returns (JsonReply) {}
+  rpc fsStat (StatRequest) returns (JsonReply) {}
+  rpc fsUnlink (UnlinkRequest) returns (JsonReply) {}
+  rpc fsUtimens (UltimensRequest) returns (JsonReply) {}
   
   // file methods
-  // rpc fileOpen () returns () {}
-  // rpc fileRead () returns () {}
+  rpc fileOpen (OpenRequest) returns (JsonReply) {}
+  rpc fileCreate (CreateRequest) returns (JsonReply) {}
+  rpc fileRead (ReadRequest) returns (ReadReply) {}
+  rpc fileWrite (WriteRequest) returns (JsonReply) {}
+  rpc fileFlush (FlushRequest) returns (JsonReply) {}
+  rpc fileRelease (ReleaseRequest) returns (JsonReply) {}
 }
 
 // Define a message describing a single user
@@ -68,11 +80,78 @@ message UpdateUserReply {
   int32 code = 1;
 }
 
-message GetAttrRequest {
+// Display file structure
+message DisplayTreeRequest {
   string path = 1;
-  string fh = 2;
 }
 
-message GetAttrReponse {
+message DisplayTreeReply {
+  string tree = 1;
+}
+
+// Generic JSON reply
+message JsonReply {
   string data = 1;
+  bool error = 2;
+}
+
+// Filesystem methods
+message AccessRequest {
+  string path = 1;
+  int32 mode = 2;
+}
+message GetAttrRequest {
+  string path = 1;
+  int32 fh = 2;
+}
+message ReadDirRequest {
+  string path = 1;
+  int32 fh = 2;
+}
+message MkDirRequest {
+  string path = 1;
+  int32 mode = 2;
+}
+message StatRequest {
+  string path = 1;
+}
+message UnlinkRequest {
+  string path = 1;
+}
+message UltimensRequest {
+  string path = 1;
+}
+
+// File methods
+message OpenRequest {
+  string path = 1;
+  int32 flags = 2;
+}
+message CreateRequest {
+  string path = 1;
+  int32 mode = 2;
+  string fi = 3;
+}
+message ReadRequest {
+  string path = 1;
+  int32 length = 2;
+  int32 offset = 3;
+  int32 fh = 4;
+}
+message ReadReply {
+  bytes data = 1; // not using JsonReply cuz data needs to be bytes
+}
+message WriteRequest{
+  string path = 1;
+  bytes buf = 2;
+  int32 offset = 3;
+  int32 fh = 4;
+}
+message FlushRequest {
+  string path = 1;
+  int32 fh = 2;
+}
+message ReleaseRequest {
+  string path = 1;
+  int32 fh = 2;
 }

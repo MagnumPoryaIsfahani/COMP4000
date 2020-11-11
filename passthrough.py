@@ -30,9 +30,12 @@ class Passthrough(Operations):
     # ==================
 
     def access(self, path, mode):
-        if IS_DEBUG: print("[access]")
-        full_path = self._full_path(path)
-        if not os.access(full_path, mode):
+        if IS_DEBUG: print("[access]", path, mode)
+        path = self._full_path(path)
+
+        response = self.stub.fsAccess(users_pb2.AccessRequest(path=path, mode=mode))
+
+        if response.error:
             raise FuseOSError(errno.EACCES)
 
     def chmod(self, path, mode):
@@ -50,17 +53,17 @@ class Passthrough(Operations):
         path = self._full_path(path)
         response = self.stub.fsGetAttr(users_pb2.GetAttrRequest(path=path, fh=fh))
         
-        print("DATA", response.data)
+        if response.error:
+            raise FuseOSError(2)
 
         return json.loads(response.data)
 
     def readdir(self, path, fh):
         if IS_DEBUG: print("[readdir]", path, fh)
-        full_path = self._full_path(path)
+        path = self._full_path(path)
+        response = self.stub.fsReadDir(users_pb2.ReadDirRequest(path=path))
+        dirents = json.loads(response.data)
 
-        dirents = ['.', '..']
-        if os.path.isdir(full_path):
-            dirents.extend(os.listdir(full_path))
         for r in dirents:
             yield r
 
@@ -84,19 +87,23 @@ class Passthrough(Operations):
 
     def mkdir(self, path, mode):
         if IS_DEBUG: print("[mkdir]")
-        return os.mkdir(self._full_path(path), mode)
+        full_path = self._full_path(path)
+        reply = self.stub.fsMkDir(users_pb2.MkDirRequest(path=full_path, mode=mode))
+        return json.loads(reply.data)
 
     def statfs(self, path):
-        if IS_DEBUG: print("[statfs]")
+        if IS_DEBUG: print("[statfs]", path)
         full_path = self._full_path(path)
-        stv = os.statvfs(full_path)
-        return dict((key, getattr(stv, key)) for key in ('f_bavail', 'f_bfree',
-            'f_blocks', 'f_bsize', 'f_favail', 'f_ffree', 'f_files', 'f_flag',
-            'f_frsize', 'f_namemax'))
+        response = self.stub.fsStat(users_pb2.StatRequest(path=full_path))
+        
+        print("STAT DATA", response.data)
+
+        return json.loads(response.data)
+
 
     def unlink(self, path):
         if IS_DEBUG: print("[unlink]")
-        return os.unlink(self._full_path(path))
+        self.stub.fsUnlink(users_pb2.UnlinkRequest(path=self._full_path(path)))
 
     def symlink(self, name, target):
         if IS_DEBUG: print("[symlink]")
@@ -112,7 +119,7 @@ class Passthrough(Operations):
 
     def utimens(self, path, times=None):
         if IS_DEBUG: print("[utimens]")
-        return os.utime(self._full_path(path), times)
+        return self.stub.fsUtimens(users_pb2.UltimensRequest(path=self._full_path(path)))
 
     # File methods
     # ============
@@ -120,22 +127,26 @@ class Passthrough(Operations):
     def open(self, path, flags):
         if IS_DEBUG: print("[open]", path, flags)
         full_path = self._full_path(path)
-        return os.open(full_path, flags)
+        response = self.stub.fileOpen(users_pb2.OpenRequest(path=full_path, flags=flags))
+        return json.loads(response.data)
 
     def create(self, path, mode, fi=None):
-        if IS_DEBUG: print("[create]")
+        if IS_DEBUG: print("[create]", path, mode, fi)
         full_path = self._full_path(path)
-        return os.open(full_path, os.O_WRONLY | os.O_CREAT, mode)
-
+        response = self.stub.fileCreate(users_pb2.CreateRequest(path=full_path, mode=mode, fi=fi))
+        
+        print("CREATE DATA:", response.data)
+        return json.loads(response.data)
+        
     def read(self, path, length, offset, fh):
         if IS_DEBUG: print("[read]", path, length, offset, fh)
-        os.lseek(fh, offset, os.SEEK_SET)
-        return "beep beep"
+        response = self.stub.fileRead(users_pb2.ReadRequest(length=length, offset=offset, fh=fh))
+        return response.data
 
     def write(self, path, buf, offset, fh):
-        if IS_DEBUG: print("[write]")
-        os.lseek(fh, offset, os.SEEK_SET)
-        return os.write(fh, buf)
+        if IS_DEBUG: print("[write]", path, buf, offset, fh)
+        response = self.stub.fileWrite(users_pb2.WriteRequest(buf=buf, offset=offset, fh=fh))
+        return json.loads(response.data)
 
     def truncate(self, path, length, fh=None):
         if IS_DEBUG: print("[truncate]")
@@ -145,11 +156,13 @@ class Passthrough(Operations):
 
     def flush(self, path, fh):
         if IS_DEBUG: print("[flush]")
-        return os.fsync(fh)
+        response = self.stub.fileFlush(users_pb2.FlushRequest(path=path, fh=fh))
+        return json.loads(response.data)
 
     def release(self, path, fh):
         if IS_DEBUG: print("[release]")
-        return os.close(fh)
+        response = self.stub.fileRelease(users_pb2.ReleaseRequest(path=path, fh=fh))
+        return json.loads(response.data)
 
     def fsync(self, path, fdatasync, fh):
         if IS_DEBUG: print("[fsync]")

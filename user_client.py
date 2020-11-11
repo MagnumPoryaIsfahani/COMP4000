@@ -11,7 +11,7 @@ import users_pb2_grpc
 import status_codes
 from passthrough import Passthrough
 
-REMOTE_DIRECTORY = "/home/student/COMP4000"
+REMOTE_DIRECTORY = "/home/student/fuse"
 
 # This method registers a new user 
 def registerUser(stub):
@@ -92,10 +92,18 @@ Please choose an operation: """)
         elif operation == '2':
             deleteUser(stub, username, token)
         elif operation == '3':
+            # display file structure
+            print('\n- FILE STRUCTURE -')
+            reply = stub.displayTree(users_pb2.DisplayTreeRequest())
+            print(reply.tree)
+            
+            # input mountpoint
             mountpoint = input('Enter the mountpoint: ')
-            print("[ctrl+c] to unmount")
+            print("[ctrl+c] to unmount...")
+            
+            # mount remote fs
             FUSE(Passthrough(REMOTE_DIRECTORY, stub), mountpoint, nothreads=True, foreground=True)
-            print('Filesystem was unmounted...\n')
+            print('\nFilesystem was unmounted...\n')
             continue
         elif operation != 'q':
             print('Error: invalid input.')

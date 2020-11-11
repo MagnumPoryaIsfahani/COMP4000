@@ -1,4 +1,5 @@
 from concurrent import futures
+from fuse import FuseOSError
 import logging
 import grpc
 import os
@@ -110,11 +111,79 @@ class Users(users_pb2_grpc.UsersServicer):
         
         return users_pb2.DeleteUserReply(success=False)
 
+    def displayTree(self, request, context):
+        tree = os.popen('tree').read()
+        return users_pb2.DisplayTreeReply(tree=tree)
+
+    # Filesystem methods
+    # ==================
+    def fsAccess(self, request, context):
+        if not os.access(request.path, request.mode):
+            return users_pb2.JsonReply(error=True)
+        return users_pb2.JsonReply(error=False)
+
     def fsGetAttr(self, request, context):
-        st = os.lstat(request.path)
-        data = dict((key, getattr(st, key)) for key in ('st_atime', 'st_ctime',
+        error = False
+        data = {}
+        try:
+            st = os.lstat(request.path)
+            data = dict((key, getattr(st, key)) for key in ('st_atime', 'st_ctime',
                      'st_gid', 'st_mode', 'st_mtime', 'st_nlink', 'st_size', 'st_uid'))
-        return users_pb2.GetAttrReponse(data=json.dumps(data))
+        except:
+            error = True
+        return users_pb2.JsonReply(data=json.dumps(data), error=error)
+
+    def fsReadDir(self, request, context):
+        dirents = ['.', '..']
+        
+        if os.path.isdir(request.path):
+            dirents.extend(os.listdir(request.path))
+        
+        return users_pb2.JsonReply(data=json.dumps(dirents))
+
+    def fsMkDir(self, request, context):
+        data = os.mkdir(request.path, request.mode)
+        return users_pb2.JsonReply(data=json.dumps(data))
+
+    def fsStat(self, request, context):
+        stv = os.statvfs(request.path)
+        data = dict((key, getattr(stv, key)) for key in ('f_bavail', 'f_bfree',
+            'f_blocks', 'f_bsize', 'f_favail', 'f_ffree', 'f_files', 'f_flag',
+            'f_frsize', 'f_namemax'))
+        return users_pb2.JsonReply(data=json.dumps(data))
+
+    def fsUtimens(self, request, context):
+        data = os.utime(request.path, request.times)
+        return users_pb2.JsonReply(data=json.dumps(data))
+
+    def fsUnlink(self, request, context):
+        data = os.unlink(request.path)
+        return users_pb2.JsonReply(data=json.dumps(data))
+
+    # File methods
+    # ============
+    def fileOpen(self, request, context):
+        data = os.open(request.path, request.flags)
+        return users_pb2.JsonReply(data=json.dumps(data))
+
+    def fileCreate(self, request, context):
+        data = os.open(request.path, os.O_WRONLY | os.O_CREAT, request.mode)
+        return users_pb2.JsonReply(data=json.dumps(data))
+
+    def fileRead(self, request, context):
+        os.lseek(request.fh, request.offset, os.SEEK_SET)
+        data = os.read(request.fh, request.length)
+        return users_pb2.ReadReply(data=data)
+
+    def fileWrite(self, request, context):
+        os.lseek(request.fh, request.offset, os.SEEK_SET)
+        return users_pb2.JsonReply(data=json.dumps(os.write(request.fh, request.buf)))
+
+    def fileFlush(self, request, context):
+        return users_pb2.JsonReply(data=json.dumps(os.fsync(request.fh)))
+
+    def fileRelease(self, request, context):
+        return users_pb2.JsonReply(data=json.dumps(os.close(request.fh)))        
 
     def saveUserToDB(self, user, username):
         # initialize db if its empty
