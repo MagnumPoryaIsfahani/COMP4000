@@ -14,11 +14,14 @@ import random
 import string
 import time
 import secrets
+import threading
 
 # how long the token will remain valid in seconds
 TOKEN_LIFETIME = 30
+lock = threading.Lock()
 
 class Users(users_pb2_grpc.UsersServicer):
+    lock = threading.Lock()
     def loginUserAccount(self, request, context):
         username, password = request.username, request.password
 
@@ -176,8 +179,12 @@ class Users(users_pb2_grpc.UsersServicer):
         return users_pb2.ReadReply(data=data)
 
     def fileWrite(self, request, context):
+        global lock
+        lock.acquire()
         os.lseek(request.fh, request.offset, os.SEEK_SET)
-        return users_pb2.JsonReply(data=json.dumps(os.write(request.fh, request.buf)))
+        data = json.dumps(os.write(request.fh, request.buf))
+        lock.release()
+        return users_pb2.JsonReply(data)
 
     def fileFlush(self, request, context):
         return users_pb2.JsonReply(data=json.dumps(os.fsync(request.fh)))
