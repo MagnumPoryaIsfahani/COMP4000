@@ -18,10 +18,11 @@ import threading
 
 # how long the token will remain valid in seconds
 TOKEN_LIFETIME = 30
+LOCKLIST = {} 
 lock = threading.Lock()
 
 class Users(users_pb2_grpc.UsersServicer):
-    lock = threading.Lock()
+    
     def loginUserAccount(self, request, context):
         username, password = request.username, request.password
 
@@ -160,14 +161,21 @@ class Users(users_pb2_grpc.UsersServicer):
         return users_pb2.JsonReply(data=json.dumps(data))
 
     def fsUnlink(self, request, context):
+        global lock
+        lock.acquire()
         data = os.unlink(request.path)
+        lock.release()
         return users_pb2.JsonReply(data=json.dumps(data))
 
     # File methods
     # ============
     def fileOpen(self, request, context):
         data = os.open(request.path, request.flags)
+        print("\tdata: "+str(data))
+        #if(data not in LOCKLIST)
+        #    LOCKLIST[data] = threading.lock()
         return users_pb2.JsonReply(data=json.dumps(data))
+        #return users_pb2.JsonReply(data=-1)
 
     def fileCreate(self, request, context):
         data = os.open(request.path, os.O_WRONLY | os.O_CREAT, request.mode)
@@ -181,16 +189,25 @@ class Users(users_pb2_grpc.UsersServicer):
     def fileWrite(self, request, context):
         global lock
         lock.acquire()
+        #LOCKLIST.get(request.fh).acquire()
         os.lseek(request.fh, request.offset, os.SEEK_SET)
-        data = json.dumps(os.write(request.fh, request.buf))
+        val = json.dumps(os.write(request.fh, request.buf))
+        #LOCKLIST.get(request.fh).release()
         lock.release()
-        return users_pb2.JsonReply(data)
+        return users_pb2.JsonReply(data=val)
 
     def fileFlush(self, request, context):
         return users_pb2.JsonReply(data=json.dumps(os.fsync(request.fh)))
 
     def fileRelease(self, request, context):
         return users_pb2.JsonReply(data=json.dumps(os.close(request.fh)))        
+
+#    def fileUnlink(self, request, context):
+#        global lock
+#        lock.acquire()
+#        value = os.unlink(request.path)
+#        lock.release()
+#        return users_pb2.JsonReply(data=value)
 
     def saveUserToDB(self, user, username):
         # initialize db if its empty
