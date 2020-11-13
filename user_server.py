@@ -161,10 +161,10 @@ class Users(users_pb2_grpc.UsersServicer):
         return users_pb2.JsonReply(data=json.dumps(data))
 
     def fsUnlink(self, request, context):
-        global lock
-        lock.acquire()
+        #global lock
+        #lock.acquire()
         data = os.unlink(request.path)
-        lock.release()
+        #lock.release()
         return users_pb2.JsonReply(data=json.dumps(data))
 
     # File methods
