@@ -115,7 +115,8 @@ class Users(users_pb2_grpc.UsersServicer):
         return users_pb2.DeleteUserReply(success=False)
 
     def displayTree(self, request, context):
-        tree = os.popen('tree').read()
+        
+        tree = os.popen('tree /home/student/fuse').read()
         return users_pb2.DisplayTreeReply(tree=tree)
 
     # Filesystem methods
