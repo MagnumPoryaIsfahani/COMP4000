@@ -18,7 +18,6 @@ import threading
 
 # how long the token will remain valid in seconds
 TOKEN_LIFETIME = 30
-LOCKLIST = {} 
 lock = threading.Lock()
 
 class Users(users_pb2_grpc.UsersServicer):
@@ -171,11 +170,7 @@ class Users(users_pb2_grpc.UsersServicer):
     # ============
     def fileOpen(self, request, context):
         data = os.open(request.path, request.flags)
-        print(request.path)
-        #if(data not in LOCKLIST)
-        #    LOCKLIST[data] = threading.lock()
         return users_pb2.JsonReply(data=json.dumps(data))
-        #return users_pb2.JsonReply(data=-1)
 
     def fileCreate(self, request, context):
         data = os.open(request.path, os.O_WRONLY | os.O_CREAT, request.mode)
@@ -191,7 +186,6 @@ class Users(users_pb2_grpc.UsersServicer):
         lock.acquire()
         os.lseek(request.fh, request.offset, os.SEEK_SET)
         val = json.dumps(os.write(request.fh, request.buf))
-        
         lock.release()
         
         return users_pb2.JsonReply(data=val)
