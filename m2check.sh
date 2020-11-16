@@ -159,14 +159,15 @@ then
 		test "Checking to see if we can update the access time of an existing file"
 		FILE="$BASEPATH"/admin/admin.txt
 		if [[ -f "$FILE" ]]; then
-		    START=$(stat -c %Y "$FILE")
+		    START=$(stat -c %X "$FILE")
+                    sleep 1
 		    touch "$FILE"
-		    END=$(stat -c %Y "$FILE")
+		    END=$(stat -c %X "$FILE")
 		    if [[ $END -gt "$START" ]]
 		    then
 		    	pass "Successfully able to update access time of $FILE"
 		    else
-		    	fail "Unable to ubdate access time of $FILE"
+		    	fail "Unable to update access time of $FILE"
 		    fi
 		else 
 		    echo "$FILE does not exist."
@@ -179,7 +180,7 @@ then
 		    rm "$FILE"
 		    if [[ $? -eq 0 ]]
 		    then
-		    	pass "Successfilly able to delete $FILE"
+		    	pass "Successfully able to delete $FILE"
 		    	
 		    	# rewriting contents into file 
 		    	echo "$CONTENTS" > "$FILE"
