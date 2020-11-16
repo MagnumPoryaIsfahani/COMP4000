@@ -8,7 +8,6 @@ from fuse import FUSE, FuseOSError, Operations
 
 import users_pb2
 import users_pb2_grpc
-import status_codes
 from passthrough import Passthrough
 
 REMOTE_DIRECTORY = "/home/student/fuse"
@@ -59,16 +58,16 @@ def updateUser(stub, username, token):
 
         response = stub.updateUserAccount(users_pb2.UpdateUserRequest(password=new_password, token=token, username=username))
 
-        if response.code == status_codes.OK:
+        if response.code == grpc.StatusCode.OK.value[0]:
             print("\nPassword updated!")
-        elif response.code == status_codes.UNAUTHENTICATED:
+        elif response.code == grpc.StatusCode.UNAUTHENTICATED.value[0]:
             print("\nError: unauthorized. Token is invalid.")
-        elif response.code == status_codes.ALREADY_EXISTS:
+        elif response.code == grpc.StatusCode.ALREADY_EXISTS.value[0]:
             print("\nError: new password must differ from old password.")
-            continue
-        elif response.code == status_codes.DEADLINE_EXCEEDED:
+            continue               
+        elif response.code == grpc.StatusCode.DEADLINE_EXCEEDED.value[0]:
             print("\nError: login timed out...")
-        elif response.code == status_codes.NOT_FOUND:
+        elif response.code == grpc.StatusCode.NOT_FOUND.value[0]:
             print("\nError: database not found.")
         else:
             print("Unknown Error.")

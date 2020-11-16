@@ -66,6 +66,7 @@ class Passthrough(Operations):
 
         for r in dirents:
             yield r
+            
 
     def readlink(self, path):
         if IS_DEBUG: print("[readlink]")
@@ -100,26 +101,32 @@ class Passthrough(Operations):
 
         return json.loads(response.data)
 
-
     def unlink(self, path):
         if IS_DEBUG: print("[unlink]")
         self.stub.fsUnlink(users_pb2.UnlinkRequest(path=self._full_path(path)))
 
+    def utimens(self, path, times=None):
+        if IS_DEBUG: print("[utimens]")
+        return self.stub.fsUtimens(users_pb2.UltimensRequest(path=self._full_path(path,timesBuf=times)))
+
+
     def symlink(self, name, target):
         if IS_DEBUG: print("[symlink]")
-        return os.symlink(target, self._full_path(name))
+        return self.stub.fsSymlink(users_pb2.SymlinkRequest(target = target, name=self._full_path(name)))
+    
 
     def rename(self, old, new):
         if IS_DEBUG: print("[rename]")
-        return os.rename(self._full_path(old), self._full_path(new))
+        return self.stub.fsRename(users_pb2.RenameRequest(oldPath = self._full_path(old), newPath=self._full_path(new)))
 
     def link(self, target, name):
         if IS_DEBUG: print("[link]")
-        return os.link(self._full_path(name), self._full_path(target))
+        return self.stub.fsLink(users_pb2.LinkRequest(name = self._full_path(name), target=self._full_path(target)))
+    
+    def flock(self,fd, operation):
+        if IS_DEBUG: print("[flock]")
+        return self.stub.fsFlock(users_pb2.FlockRequest(fileDescriptor = fd, lockOperation= operation))
 
-    def utimens(self, path, times=None):
-        if IS_DEBUG: print("[utimens]")
-        return self.stub.fsUtimens(users_pb2.UltimensRequest(path=self._full_path(path)))
 
     # File methods
     # ============

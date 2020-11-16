@@ -26,6 +26,11 @@ service Users {
   rpc fsStat (StatRequest) returns (JsonReply) {}
   rpc fsUnlink (UnlinkRequest) returns (JsonReply) {}
   rpc fsUtimens (UltimensRequest) returns (JsonReply) {}
+  rpc fsSymlink (SymlinkRequest)returns(JsonReply){}
+  rpc fsRename (RenameRequest)returns(JsonReply){}
+  rpc fsLink (LinkRequest)returns(JsonReply){}
+
+
   
   // file methods
   rpc fileOpen (OpenRequest) returns (JsonReply) {}
@@ -120,6 +125,23 @@ message UnlinkRequest {
 }
 message UltimensRequest {
   string path = 1;
+  bytes timesBuf = 2;
+}
+message SymlinkRequest {
+  string target = 1;
+  string name = 2;
+}
+message RenameRequest {
+  string oldPath = 1;
+  string newPath = 2;
+}
+message LinkRequest {
+  string name = 1;
+  string target = 2;
+}
+message FlockRequest{
+  int32 fileDescriptor = 1;
+  int32 lockOperation = 2;
 }
 
 // File methods
@@ -141,7 +163,7 @@ message ReadRequest {
 message ReadReply {
   bytes data = 1; // not using JsonReply cuz data needs to be bytes
 }
-message WriteRequest{
+message WriteRequest {
   string path = 1;
   bytes buf = 2;
   int32 offset = 3;
