@@ -66,7 +66,7 @@ class Users(users_pb2_grpc.UsersServicer):
 
         # check if token has expired
         if user.get("login_time", 0) + TOKEN_LIFETIME < time.time():
-            return users_pb2.UpdateUserReply(code=grpc.StatusCode.DEADLINE_EXCEEDED.value[0]
+            return users_pb2.UpdateUserReply(code=grpc.StatusCode.DEADLINE_EXCEEDED.value[0])
         
         # checks to see if new password is the same as old password
         stored_hash = user.get("password")
@@ -122,6 +122,10 @@ class Users(users_pb2_grpc.UsersServicer):
             return users_pb2.JsonReply(error=True)
         return users_pb2.JsonReply(error=False)
 
+    def fsChmod(self, request, contexgt):
+        data = os.chmod(request.path, request.mode)
+        return users_pb2.JsonReply(data=json.dumps(data))
+
     def fsGetAttr(self, request, context):
         error = False
         data = {}
@@ -140,6 +144,10 @@ class Users(users_pb2_grpc.UsersServicer):
             dirents.extend(os.listdir(request.path))
         
         return users_pb2.JsonReply(data=json.dumps(dirents))
+    
+    def fsRmDir(self, request, context):
+        data = os.rmdir(request.path)
+        return users_pb2.JsonReply(data=json.dumps(data))
 
     def fsMkDir(self, request, context):
         data = os.mkdir(request.path, request.mode)
@@ -153,10 +161,10 @@ class Users(users_pb2_grpc.UsersServicer):
         return users_pb2.JsonReply(data=json.dumps(data))
 
     def fsUtimens(self, request, context):
-        data = os.utime(request.path, request.timesBuf)
+        data = os.utime(request.path, json.loads(request.timesBuf))
         return users_pb2.JsonReply(data=json.dumps(data))
 
-   def fsUnlink(self, request, context):
+    def fsUnlink(self, request, context):
         global lock 
         lock = threading.Lock()
         lock.acquire()
@@ -195,7 +203,7 @@ class Users(users_pb2_grpc.UsersServicer):
         data = os.read(request.fh, request.length)
         return users_pb2.ReadReply(data=data)
 
-    def fileWrite(self, request, context):
+    def fileWrite(self, request, context):  
         os.lseek(request.fh, request.offset, os.SEEK_SET)
         return users_pb2.JsonReply(data=json.dumps(os.write(request.fh, request.buf)))
 

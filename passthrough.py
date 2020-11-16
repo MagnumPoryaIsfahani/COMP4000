@@ -40,8 +40,8 @@ class Passthrough(Operations):
 
     def chmod(self, path, mode):
         if IS_DEBUG: print("[chmod]")
-        full_path = self._full_path(path)
-        return os.chmod(full_path, mode)
+        response = self.stub.fsChmod(users_pb2.ChmodRequest(path=self._full_path(path), mode=mode))
+        return json.loads(response.data)
 
     def chown(self, path, uid, gid):
         if IS_DEBUG: print("[chown]")
@@ -83,13 +83,14 @@ class Passthrough(Operations):
     def rmdir(self, path):
         if IS_DEBUG: print("[rmdir]")
         full_path = self._full_path(path)
-        return os.rmdir(full_path)
+        response = self.stub.fsRmDir(users_pb2.RemoveDirRequest(path=full_path))
+        return json.loads(response.data)
 
     def mkdir(self, path, mode):
         if IS_DEBUG: print("[mkdir]")
         full_path = self._full_path(path)
-        reply = self.stub.fsMkDir(users_pb2.MkDirRequest(path=full_path, mode=mode))
-        return json.loads(reply.data)
+        response = self.stub.fsMkDir(users_pb2.MkDirRequest(path=full_path, mode=mode))
+        return json.loads(response.data)
 
     def statfs(self, path):
         if IS_DEBUG: print("[statfs]", path)
@@ -118,8 +119,8 @@ class Passthrough(Operations):
         return os.link(self._full_path(name), self._full_path(target))
 
     def utimens(self, path, times=None):
-        if IS_DEBUG: print("[utimens]")
-        return self.stub.fsUtimens(users_pb2.UltimensRequest(path=self._full_path(path,timesBuf=times)))
+        if IS_DEBUG: print("[utimens]", path, json.dumps(times))
+        return self.stub.fsUtimens(users_pb2.UltimensRequest(path=self._full_path(path),timesBuf=json.dumps(times)))
 
 
     def symlink(self, name, target):
@@ -163,7 +164,8 @@ class Passthrough(Operations):
 
     def write(self, path, buf, offset, fh):
         if IS_DEBUG: print("[write]", path, buf, offset, fh)
-        response = self.stub.fileWrite(users_pb2.WriteRequest(buf=buf, offset=offset, fh=fh))
+        full_path = self._full_path(path)
+        response = self.stub.fileWrite(users_pb2.WriteRequest(path=full_path, buf=buf, offset=offset, fh=fh))
         return json.loads(response.data)
 
     def truncate(self, path, length, fh=None):
