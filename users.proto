@@ -29,6 +29,7 @@ service Users {
   rpc fsSymlink (SymlinkRequest)returns(JsonReply){}
   rpc fsRename (RenameRequest)returns(JsonReply){}
   rpc fsLink (LinkRequest)returns(JsonReply){}
+  rpc fsFlock (FlockRequest)returns(JsonReply){}
   
   // file methods
   rpc fileOpen (OpenRequest) returns (JsonReply) {}
@@ -141,7 +142,6 @@ message FlockRequest {
   int32 fileDescriptor = 1;
   int32 lockOperation = 2;
 }
-
 
 // File methods
 message OpenRequest {
