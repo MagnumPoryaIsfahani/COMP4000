@@ -3,10 +3,10 @@ from fuse import FuseOSError
 import logging
 import grpc
 import os
+import threading
 
 import users_pb2
 import users_pb2_grpc
-import status_codes
 
 import json
 import bcrypt
@@ -58,21 +58,21 @@ class Users(users_pb2_grpc.UsersServicer):
         try:
             user = self.fetchUserFromDB(username)
         except:
-            return users_pb2.UpdateUserReply(code=status_codes.NOT_FOUND)
+            return users_pb2.UpdateUserReply(code=grpc.StatusCode.NOT_FOUND.value[0])
 
         # check that token is valid
         if user.get("token") != request.token:
-            return users_pb2.UpdateUserReply(code=status_codes.UNAUTHENTICATED)
+            return users_pb2.UpdateUserReply(code=grpc.StatusCode.UNAUTHENTICATED.value[0])
 
         # check if token has expired
         if user.get("login_time", 0) + TOKEN_LIFETIME < time.time():
-            return users_pb2.UpdateUserReply(code=status_codes.DEADLINE_EXCEEDED)
+            return users_pb2.UpdateUserReply(code=grpc.StatusCode.DEADLINE_EXCEEDED.value[0]
         
         # checks to see if new password is the same as old password
         stored_hash = user.get("password")
         is_same_password = bcrypt.checkpw(request.password.encode(), stored_hash.encode())
         if is_same_password:
-            return users_pb2.UpdateUserReply(code=status_codes.ALREADY_EXISTS)
+            return users_pb2.UpdateUserReply(code=grpc.StatusCode.ALREADY_EXISTS.value[0])
 
         # hashes the new password and invalidates existing token by setting login_time to 0
         hashed_binary = bcrypt.hashpw(request.password.encode(), bcrypt.gensalt())
@@ -82,7 +82,7 @@ class Users(users_pb2_grpc.UsersServicer):
         #throw the updated account into the temp dictionary
         self.saveUserToDB(updatedUser, username)
 
-        return users_pb2.UpdateUserReply(code=status_codes.OK)
+        return users_pb2.UpdateUserReply(code=grpc.StatusCode.OK.value[0])
                 
     def createUserAccount(self, request, context):  
         # Create a salt and using bcrypt, hash the user's credentials
@@ -153,11 +153,31 @@ class Users(users_pb2_grpc.UsersServicer):
         return users_pb2.JsonReply(data=json.dumps(data))
 
     def fsUtimens(self, request, context):
-        data = os.utime(request.path, request.times)
+        data = os.utime(request.path, request.timesBuf)
         return users_pb2.JsonReply(data=json.dumps(data))
 
-    def fsUnlink(self, request, context):
+   def fsUnlink(self, request, context):
+        global lock 
+        lock = threading.Lock()
+        lock.acquire()
         data = os.unlink(request.path)
+        lock.release()
+        return users_pb2.JsonReply(data=json.dumps(data))
+
+    def fsSymlink(self, request, context):
+        data = os.symlink(request.target, request.name)
+        return users_pb2.JsonReply(data=json.dumps(data))
+    
+    def fsRename(self, request, context):
+        data = os.rename(request.oldPath, request.newPath)
+        return users_pb2.JsonReply(data=json.dumps(data))
+    
+    def fsLink(self, request, context):
+        data = os.link(request.name, request.target)
+        return users_pb2.JsonReply(data=json.dumps(data))
+
+    def fsFlock(self, request, context):
+        data = os.flock(request.fileDescriptor, request.lockOperation)
         return users_pb2.JsonReply(data=json.dumps(data))
 
     # File methods

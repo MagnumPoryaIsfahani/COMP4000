@@ -166,7 +166,7 @@ then
 		    then
 		    	pass "Successfully able to update access time of $FILE"
 		    else
-		    	fail "Unable to ubdate access time of $FILE"
+		    	fail "Unable to update access time of $FILE"
 		    fi
 		else 
 		    echo "$FILE does not exist."
