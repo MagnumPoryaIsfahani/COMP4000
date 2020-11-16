@@ -14,11 +14,14 @@ import random
 import string
 import time
 import secrets
+import threading
 
 # how long the token will remain valid in seconds
 TOKEN_LIFETIME = 30
+lock = threading.Lock()
 
 class Users(users_pb2_grpc.UsersServicer):
+    
     def loginUserAccount(self, request, context):
         username, password = request.username, request.password
 
@@ -112,7 +115,8 @@ class Users(users_pb2_grpc.UsersServicer):
         return users_pb2.DeleteUserReply(success=False)
 
     def displayTree(self, request, context):
-        tree = os.popen('tree').read()
+        
+        tree = os.popen('tree /home/student/fuse').read()
         return users_pb2.DisplayTreeReply(tree=tree)
 
     # Filesystem methods
@@ -157,7 +161,10 @@ class Users(users_pb2_grpc.UsersServicer):
         return users_pb2.JsonReply(data=json.dumps(data))
 
     def fsUnlink(self, request, context):
+        global lock
+        lock.acquire()
         data = os.unlink(request.path)
+        lock.release()
         return users_pb2.JsonReply(data=json.dumps(data))
 
     # File methods
@@ -176,8 +183,13 @@ class Users(users_pb2_grpc.UsersServicer):
         return users_pb2.ReadReply(data=data)
 
     def fileWrite(self, request, context):
+        global lock
+        lock.acquire()
         os.lseek(request.fh, request.offset, os.SEEK_SET)
-        return users_pb2.JsonReply(data=json.dumps(os.write(request.fh, request.buf)))
+        val = json.dumps(os.write(request.fh, request.buf))
+        lock.release()
+        
+        return users_pb2.JsonReply(data=val)
 
     def fileFlush(self, request, context):
         return users_pb2.JsonReply(data=json.dumps(os.fsync(request.fh)))
