@@ -20,12 +20,18 @@ service Users {
 
   // filesystem methods
   rpc fsAccess (AccessRequest) returns (JsonReply) {}
+  rpc fsChmod (ChmodRequest) returns (JsonReply) {}
   rpc fsGetAttr (GetAttrRequest) returns (JsonReply) {}
   rpc fsReadDir (ReadDirRequest) returns (JsonReply) {}
+  rpc fsRmDir (RemoveDirRequest) returns (JsonReply) {}
   rpc fsMkDir (MkDirRequest) returns (JsonReply) {}
   rpc fsStat (StatRequest) returns (JsonReply) {}
   rpc fsUnlink (UnlinkRequest) returns (JsonReply) {}
   rpc fsUtimens (UltimensRequest) returns (JsonReply) {}
+  rpc fsSymlink (SymlinkRequest)returns(JsonReply){}
+  rpc fsRename (RenameRequest)returns(JsonReply){}
+  rpc fsLink (LinkRequest)returns(JsonReply){}
+  rpc fsFlock (FlockRequest)returns(JsonReply){}
   
   // file methods
   rpc fileOpen (OpenRequest) returns (JsonReply) {}
@@ -100,6 +106,10 @@ message AccessRequest {
   string path = 1;
   int32 mode = 2;
 }
+message ChmodRequest {
+  string path = 1;
+  int32 mode = 2;
+}
 message GetAttrRequest {
   string path = 1;
   int32 fh = 2;
@@ -107,6 +117,9 @@ message GetAttrRequest {
 message ReadDirRequest {
   string path = 1;
   int32 fh = 2;
+}
+message RemoveDirRequest {
+  string path = 1;
 }
 message MkDirRequest {
   string path = 1;
@@ -120,6 +133,23 @@ message UnlinkRequest {
 }
 message UltimensRequest {
   string path = 1;
+  string timesBuf = 2;
+}
+message SymlinkRequest {
+  string target = 1;
+  string name = 2;
+}
+message RenameRequest {
+  string oldPath = 1;
+  string newPath = 2;
+}
+message LinkRequest {
+  string name = 1;
+  string target = 2;
+}
+message FlockRequest {
+  int32 fileDescriptor = 1;
+  int32 lockOperation = 2;
 }
 
 // File methods
