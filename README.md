@@ -6,9 +6,10 @@
 1. `$ python ./user_server.py`
 1. `$ python ./user_client.py`
 
-The server can be passed an IP address to allow running on multiple machines. 
+The client can be passed an IP address to allow running on multiple machines. 
 
-`$ python ./user_server.py IPaddresshere`
+`$ python ./user_client.py IPaddresshere`
 
-Otherwise the server will default to local host.
+Otherwise the client will default to local host.
 
+Run genkey.sh to generate the server credentials.

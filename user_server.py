@@ -262,7 +262,16 @@ class Users(users_pb2_grpc.UsersServicer):
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     users_pb2_grpc.add_UsersServicer_to_server(Users(), server)
+    
+    with open('server.key','rb') as f:
+        private_key = f.read()
+    with open('server.crt','rb') as f:
+        certificate_chain = f.read()
+
+    server_creds = grpc.ssl_server_credentials(((private_key,certificate_chain,),))
+
     server.add_insecure_port('[::]:10001')
+    server.add_secure_port('[::]:10002',server_creds)
     server.start()
     server.wait_for_termination()
 

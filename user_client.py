@@ -148,7 +148,10 @@ def run():
     ip_address = "localhost"
     if(len(sys.argv) > 1):
         ip_address = sys.argv[1]
-    with grpc.insecure_channel(ip_address+':10001') as channel:
+    with open('server.crt','rb') as f:
+        creds = grpc.ssl_channel_credentials(root_certificates=f.read())
+    #with grpc.insecure_channel(ip_address+':10001') as channel:
+    with grpc.secure_channel(ip_address+':10002', creds) as channel:
         stub = users_pb2_grpc.UsersStub(channel)
         menuSelect(stub)
         quit()
