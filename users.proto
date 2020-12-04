@@ -15,8 +15,20 @@ service Users {
   // This function will allow a user to update their password.
   rpc updateUserAccount (UpdateUserRequest) returns (UpdateUserReply) {}
 
+  //This function checks if a user is authorized to mount the FS
+  rpc auth2Mount (auth2MountRequest) returns (auth2MountReply) {}
+
   // returns file structure
   rpc displayTree (DisplayTreeRequest) returns (DisplayTreeReply) {}
+
+  //checking if a user is still valid
+  rpc checkToken (CheckTokenRequest) returns (CheckTokenReply) {}
+
+  //admin functions
+  rpc changeMountPerms (ChangeMountPermsRequest) returns (ChangeMountPermsReply) {}
+  rpc adminUpdateUser (adminUpdateUserRequest) returns (UpdateUserReply) {}
+  rpc adminCreateUser (adminCreateUserRequest) returns (CreateUserReply) {}
+  rpc clearanceLevel (ClearanceLevelRequest) returns (ClearanceLevelReply) {}
 
   // filesystem methods
   rpc fsAccess (AccessRequest) returns (JsonReply) {}
@@ -64,6 +76,7 @@ message LoginUserRequest {
 message LoginUserReply {
   bool success = 1; 
   string token = 2;
+  string username = 3;
 }
 
 // Define a message to delete a user
@@ -99,7 +112,7 @@ message DisplayTreeReply {
 // Generic JSON reply
 message JsonReply {
   string data = 1;
-  bool error = 2;
+  bool error = 2; 
 }
 
 // Filesystem methods
@@ -193,4 +206,52 @@ message ReleaseRequest {
   int32 fh = 2;
 }
 
+//Mounting methods
+message auth2MountRequest {
+  string username = 1;
+  string token = 2;
+}
+message auth2MountReply {
+  int32 success = 1;
+}
+
+//admin specific methods
+message ChangeMountPermsRequest {
+  string targetName = 1;
+  string value = 2;
+}
+message ChangeMountPermsReply {
+  bool success = 1;
+}
+
+message adminCreateUserRequest {
+  string adminName = 1;
+  string adminToken = 2;
+  string username = 3;
+  string password = 4;
+  string confirmation = 5;
+}
+
+message adminUpdateUserRequest {
+  string adminName = 1;
+  string adminToken = 2;
+  string username = 3;
+  string password = 4;
+  string mountPerms = 5;
+}
+
+//checks if a token and username is still valid
+message CheckTokenRequest {
+  string username = 1;
+  string token = 2;
+}
+message CheckTokenReply {
+  bool success = 1;
+}
+message ClearanceLevelRequest {
+  string username = 1;
+}
+message ClearanceLevelReply {
+  int32 level = 1;
+}
 

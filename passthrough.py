@@ -7,6 +7,7 @@ import os
 import sys
 import json
 import errno
+import signal
 
 import users_pb2
 import datetime
@@ -14,9 +15,12 @@ import datetime
 IS_DEBUG = True
 
 class Passthrough(Operations):
-    def __init__(self, root, stub):
+    def __init__(self, root, stub, username, token):
         self.root = root
         self.stub = stub
+        self.username = username
+        self.token = token
+        print(self.username)
 
     # Helpers
     # =======
@@ -31,6 +35,10 @@ class Passthrough(Operations):
     # ==================
 
     def access(self, path, mode):
+        valid=self.stub.checkToken(users_pb2.CheckTokenRequest(username=self.username, token=self.token))
+        if not valid.success:
+            print("token Expired, unmounting fileSystem")
+            os.kill(os.getpid(),signal.SIGINT)
         if IS_DEBUG: print("[access]", path, mode)
         path = self._full_path(path)
 
@@ -40,11 +48,19 @@ class Passthrough(Operations):
             raise FuseOSError(errno.EACCES)
 
     def chmod(self, path, mode):
+        valid=self.stub.checkToken(users_pb2.CheckTokenRequest(username=self.username, token=self.token))
+        if not valid.success:
+            print("token Expired, unmounting fileSystem")
+            os.kill(os.getpid(),signal.SIGINT)
         if IS_DEBUG: print("[chmod]")
         response = self.stub.fsChmod(users_pb2.ChmodRequest(path=self._full_path(path), mode=mode))
         return json.loads(response.data)
 
     def chown(self, path, uid, gid):
+        valid=self.stub.checkToken(users_pb2.CheckTokenRequest(username=self.username, token=self.token))
+        if not valid.success:
+            print("token Expired, unmounting fileSystem")
+            os.kill(os.getpid(),signal.SIGINT)
         if IS_DEBUG: print("[chown]")
         response = self.stub.fsChown(users_pb2.ChownRequest(path=self._full_path(path), uid=uid, gid=gid))
         return json.loads(response.data)
@@ -61,6 +77,10 @@ class Passthrough(Operations):
         return json.loads(response.data)
 
     def readdir(self, path, fh):
+        valid=self.stub.checkToken(users_pb2.CheckTokenRequest(username=self.username, token=self.token))
+        if not valid.success:
+            print("token Expired, unmounting fileSystem")
+            os.kill(os.getpid(),signal.SIGINT)
         if IS_DEBUG: print("[readdir]", path, fh)
         path = self._full_path(path)
         response = self.stub.fsReadDir(users_pb2.ReadDirRequest(path=path))
@@ -70,6 +90,10 @@ class Passthrough(Operations):
             yield r
 
     def readlink(self, path):
+        valid=self.stub.checkToken(users_pb2.CheckTokenRequest(username=self.username, token=self.token))
+        if not valid.success:
+            print("token Expired, unmounting fileSystem")
+            os.kill(os.getpid(),signal.SIGINT)
         if IS_DEBUG: print("[readlink]")
         pathname = os.readlink(self._full_path(path))
         if pathname.startswith("/"):
@@ -79,16 +103,28 @@ class Passthrough(Operations):
             return pathname
 
     def mknod(self, path, mode, dev):
+        valid=self.stub.checkToken(users_pb2.CheckTokenRequest(username=self.username, token=self.token))
+        if not valid.success:
+            print("token Expired, unmounting fileSystem")
+            os.kill(os.getpid(),signal.SIGINT)
         if IS_DEBUG: print("[mknod]")
         return os.mknod(self._full_path(path), mode, dev)
 
     def rmdir(self, path):
+        valid=self.stub.checkToken(users_pb2.CheckTokenRequest(username=self.username, token=self.token))
+        if not valid.success:
+            print("token Expired, unmounting fileSystem")
+            os.kill(os.getpid(),signal.SIGINT)
         if IS_DEBUG: print("[rmdir]")
         full_path = self._full_path(path)
         response = self.stub.fsRmDir(users_pb2.RmDirRequest(path=full_path))
         return json.loads(response.data)
 
     def mkdir(self, path, mode):
+        valid=self.stub.checkToken(users_pb2.CheckTokenRequest(username=self.username, token=self.token))
+        if not valid.success:
+            print("token Expired, unmounting fileSystem")
+            os.kill(os.getpid(),signal.SIGINT)
         if IS_DEBUG: print("[mkdir]")
         full_path = self._full_path(path)
         response = self.stub.fsMkDir(users_pb2.MkDirRequest(path=full_path, mode=mode))
@@ -105,6 +141,10 @@ class Passthrough(Operations):
 
 
     def unlink(self, path):
+        valid=self.stub.checkToken(users_pb2.CheckTokenRequest(username=self.username, token=self.token))
+        if not valid.success:
+            print("token Expired, unmounting fileSystem")
+            os.kill(os.getpid(),signal.SIGINT)
         if IS_DEBUG: print("[unlink]")
         self.stub.fsUnlink(users_pb2.UnlinkRequest(path=self._full_path(path)))
 
@@ -124,10 +164,18 @@ class Passthrough(Operations):
         self.stub.fsSymlink(users_pb2.SymlinkRequest(target = target, name=self._full_path(name))) 
 
     def rename(self, old, new):
+        valid=self.stub.checkToken(users_pb2.CheckTokenRequest(username=self.username, token=self.token))
+        if not valid.success:
+            print("token Expired, unmounting fileSystem")
+            os.kill(os.getpid(),signal.SIGINT)
         if IS_DEBUG: print("[rename]")
         self.stub.fsRename(users_pb2.RenameRequest(oldPath = self._full_path(old), newPath=self._full_path(new)))
 
     def link(self, target, name):
+        valid=self.stub.checkToken(users_pb2.CheckTokenRequest(username=self.username, token=self.token))
+        if not valid.success:
+            print("token Expired, unmounting fileSystem")
+            os.kill(os.getpid(),signal.SIGINT)
         if IS_DEBUG: print("[link]")
         self.stub.fsLink(users_pb2.LinkRequest(name = self._full_path(name), target=self._full_path(target)))
     
@@ -139,9 +187,16 @@ class Passthrough(Operations):
     # ============
 
     def open(self, path, flags):
+        valid=self.stub.checkToken(users_pb2.CheckTokenRequest(username=self.username, token=self.token))
+        if not valid.success:
+            print("token Expired, unmounting fileSystem")
+            os.kill(os.getpid(),signal.SIGINT)
+            
+           
         if IS_DEBUG: print("[open]", path, flags)
         full_path = self._full_path(path)
         response = self.stub.fileOpen(users_pb2.OpenRequest(path=full_path, flags=flags))
+        
         return json.loads(response.data)
 
     def create(self, path, mode, fi=None):
@@ -180,5 +235,9 @@ class Passthrough(Operations):
         return json.loads(response.data)
 
     def fsync(self, path, fdatasync, fh):
+        valid=self.stub.checkToken(users_pb2.CheckTokenRequest(username=self.username, token=self.token))
+        if not valid.success:
+            print("token Expired, unmounting fileSystem")
+            os.kill(os.getpid(),signal.SIGINT)
         if IS_DEBUG: print("[fsync]")
         return self.flush(path, fh)

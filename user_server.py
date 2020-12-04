@@ -52,7 +52,7 @@ class Users(users_pb2_grpc.UsersServicer):
 
         self.saveUserToDB(user, username)
         
-        return users_pb2.LoginUserReply(success=True, token=user["token"])
+        return users_pb2.LoginUserReply(success=True, token=user["token"], username=username)
 
     def updateUserAccount(self, request, context):
         username = request.username
@@ -63,13 +63,14 @@ class Users(users_pb2_grpc.UsersServicer):
         except:
             return users_pb2.UpdateUserReply(code=grpc.StatusCode.NOT_FOUND.value[0])
 
-        # check that token is valid
-        if user.get("token") != request.token:
-            return users_pb2.UpdateUserReply(code=grpc.StatusCode.UNAUTHENTICATED.value[0])
+        # check that token is valid -- Now done in checkToken
+        #if user.get("token") != request.token:
+        #    return users_pb2.UpdateUserReply(code=grpc.StatusCode.UNAUTHENTICATED.value[0])
 
+        #now done in stub.checkToken, before allowing the rest of the function to proceed
         # check if token has expired
-        if user.get("login_time", 0) + TOKEN_LIFETIME < time.time():
-            return users_pb2.UpdateUserReply(code=grpc.StatusCode.DEADLINE_EXCEEDED.value[0])
+        #if user.get("login_time", 0) + TOKEN_LIFETIME < time.time():
+        #    return users_pb2.UpdateUserReply(code=grpc.StatusCode.DEADLINE_EXCEEDED.value[0])
         
         # checks to see if new password is the same as old password
         stored_hash = user.get("password")
@@ -80,8 +81,8 @@ class Users(users_pb2_grpc.UsersServicer):
         # hashes the new password and invalidates existing token by setting login_time to 0
         hashed_binary = bcrypt.hashpw(request.password.encode(), bcrypt.gensalt())
         password = hashed_binary.decode(encoding="utf-8")
-        updatedUser = {"password": password, "login_time": 0}
-
+        updatedUser = {"password": password, "login_time": 0, "mount_perms":user["mount_perms"]}
+        
         #throw the updated account into the temp dictionary
         self.saveUserToDB(updatedUser, username)
 
@@ -98,7 +99,7 @@ class Users(users_pb2_grpc.UsersServicer):
             return users_pb2.CreateUserReply(success=False)
         except:
             # creating account
-            self.saveUserToDB({'password': password}, username)
+            self.saveUserToDB({'password': password, 'mount_perms':'0'}, username)
             return users_pb2.CreateUserReply(success=True) 
 
     def deleteUserAccount(self, request, context):
@@ -198,7 +199,7 @@ class Users(users_pb2_grpc.UsersServicer):
     # File methods
     # ============
     def fileOpen(self, request, context):
-        data = os.open(request.path, request.flags)
+        data = os.open(request.path, request.flags)       
         return users_pb2.JsonReply(data=json.dumps(data))
 
     def fileCreate(self, request, context):
@@ -242,6 +243,31 @@ class Users(users_pb2_grpc.UsersServicer):
         json.dump(user_entries, write_file)
         write_file.close()
 
+    def auth2Mount(self, request, context):
+        user = self.fetchUserFromDB(request.username)
+        #print("Checking "+request.username+" mounting permissions")
+        # user must have previously logged in to get a token
+        if not user.get("login_time",False):
+            return users_pb2.auth2MountReply(success=1)
+
+        if user["token"] != request.token:
+            return users_pb2.auth2MountReply(success=2)
+
+        if user["login_time"] + TOKEN_LIFETIME < time.time():    
+            return users_pb2.auth2MountReply(success=3)
+        
+        if user["mount_perms"] == '1':
+            return users_pb2.auth2MountReply(success=4)
+
+        return users_pb2.auth2MountReply(success=0)
+    def checkToken(self, request, context):
+        user = self.fetchUserFromDB(request.username)
+        if user.get("token",0) == request.token and user.get("login_time",0)+TOKEN_LIFETIME > time.time():
+            user["login_time"] = time.time()
+            saveUserToDB(user,request.username)
+            return users_pb2.CheckTokenReply(success=True)
+        return users_pb2.CheckTokenReply(success=False)
+
     def fetchUserFromDB(self, username):
         # error if db doesn't exist or is empty
         if not os.path.exists("userDB.json") or os.stat("userDB.json").st_size == 0:
@@ -259,6 +285,25 @@ class Users(users_pb2_grpc.UsersServicer):
 
         return user
 
+    # could this be added onto the login reply?    
+    def clearanceLevel(self, request, context):
+        f = open("admins.txt",'r')
+        for line in f:
+            if line[:-1] == request.username:
+                return users_pb2.ClearanceLevelReply(level=0)
+        f.close()
+        f = open("trusted.txt",'r')
+        for line in f:
+            if line[:-1] == request.username:
+                return users_pb2.ClearanceLevelReply(level=1)
+        return users_pb2.ClearanceLevelReply(level=2)
+
+    def changeMountPerms(self, request, context):
+        user = self.fetchUserFromDB(request.targetName)
+        user["mount_perms"] = request.value
+        self.saveUserToDB(user, request.targetName)
+        return users_pb2.ChangeMountPermsReply(success=True)
+
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     users_pb2_grpc.add_UsersServicer_to_server(Users(), server)
@@ -270,7 +315,7 @@ def serve():
 
     server_creds = grpc.ssl_server_credentials(((private_key,certificate_chain,),))
 
-    server.add_insecure_port('[::]:10001')
+    #server.add_insecure_port('[::]:10001')
     server.add_secure_port('[::]:10002',server_creds)
     server.start()
     server.wait_for_termination()

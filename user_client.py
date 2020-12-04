@@ -36,6 +36,36 @@ def registerUser(stub):
 
         return
             
+def changeMountingPermissions(stub,username,token):
+    valid = stub.checkToken(users_pb2.CheckTokenRequest(username=username, token=token))
+    if not valid.success:
+        print("Token Expired, please login again")
+    target = input("For which username would you like to change mounting privileges: ")
+    val = ""
+    while val !='0'  and val != '1':
+        val = input("""
+    [0] Give Mounting Privileges
+    [1] Revoke Mounting Privileges
+        """)
+    
+    response = stub.changeMountPerms(users_pb2.ChangeMountPermsRequest(targetName=target,value=val))
+    if response.success:
+        print("Permissions successfully changed!")
+    else:
+        print("Permissions not changed.")
+    return
+    
+def newUserAccount(stub,username,token):
+    valid = stub.checkToken(users_pb2.CheckTokenRequest(username=username, token=token))
+    if valid.success:
+        registerUser(stub)
+        adminSelection(stub,username,token)
+    else:
+        response = login(stub)
+        if response.success:
+            registerUser(stub)
+        else:
+            menuSelect()
 
 # Deletes a user
 # Returns true if success
@@ -47,8 +77,9 @@ def deleteUser(stub, uname, tok):
     else:
         print("\nError: your account has not been removed.")
 
-def updateUser(stub, username, token):
-    while True:
+def updateUser(stub, username,token):
+    valid = stub.checkToken(users_pb2.CheckTokenRequest(username=username, token=token))    
+    while valid.success:
         new_password =  getpass.getpass("Enter a new password for your account: ")
         confirm_password =  getpass.getpass("Please confirm your password by retyping: ")
         
@@ -75,6 +106,42 @@ def updateUser(stub, username, token):
         # return to userSelection
         return
 
+def updateOtherUser(stub,username,token):
+    valid = stub.checkToken(users_pb2.CheckTokenRequest(username=username, token=token))
+    if not valid.success:
+        print("Your session has expired. Please Login again.")
+        menuSelection(stub)
+    targetName = input("Which user would you like to change: ")
+    
+    while valid.success:
+        new_password =  getpass.getpass("Enter a new password for your account: ")
+        confirm_password =  getpass.getpass("Please confirm your password by retyping: ")
+        
+        if new_password != confirm_password:
+            print("\nError: your passwords don't match, please try again")
+            continue
+
+        response = stub.updateUserAccount(users_pb2.UpdateUserRequest(password=new_password, token=token, username=targetName))
+
+        if response.code == grpc.StatusCode.OK.value[0]:
+            print("\nPassword updated!")
+        elif response.code == grpc.StatusCode.UNAUTHENTICATED.value[0]:
+            print("\nError: unauthorized. Token is invalid.")
+        elif response.code == grpc.StatusCode.ALREADY_EXISTS.value[0]:
+            print("\nError: new password must differ from old password.")
+            continue
+        elif response.code == grpc.StatusCode.DEADLINE_EXCEEDED.value[0]:
+            print("\nError: login timed out...")
+        elif response.code == grpc.StatusCode.NOT_FOUND.value[0]:
+            print("\nError: database not found.")
+        else:
+            print("Unknown Error.")
+        
+        # return to userSelection
+        return
+
+    return
+
 # menu once the user has logged in
 def userSelection(stub, username, token):
     while True:
@@ -91,18 +158,32 @@ Please choose an operation: """)
         elif operation == '2':
             deleteUser(stub, username, token)
         elif operation == '3':
-            # display file structure
-            print('\n- FILE STRUCTURE -')
-            reply = stub.displayTree(users_pb2.DisplayTreeRequest())
-            print(reply.tree)
+            reply = stub.auth2Mount(users_pb2.auth2MountRequest(username=username,token=token))
+            if reply.success != 0:
+                print("You have not been authorized to mount the filesystem\n")
+                if reply.success == 1:
+                    print("You shouldn't be here, you hacker\n")
+                elif reply.success == 2:
+                    print("Your token doesn't match the one on file\n")
+                elif reply.success == 3:
+                    print("Your token has expired due to inactivity.\nPlease login in again.\n")
+                    menuSelect(stub)
+                else:
+                    print("Please contact your system Administrator.\n")
+                continue
+            else:
+                # display file structure
+                print('\n- FILE STRUCTURE -')
+                reply = stub.displayTree(users_pb2.DisplayTreeRequest())
+                print(reply.tree)
             
-            # input mountpoint
-            mountpoint = input('Enter the mountpoint: ')
-            print("[ctrl+c] to unmount...")
+                # input mountpoint
+                mountpoint = input('Enter the mountpoint: ')
+                print("[ctrl+c] to unmount...")
             
-            # mount remote fs
-            FUSE(Passthrough(REMOTE_DIRECTORY, stub), mountpoint, nothreads=True, foreground=True)
-            print('\nFilesystem was unmounted...\n')
+                # mount remote fs
+                FUSE(Passthrough(REMOTE_DIRECTORY, stub), mountpoint, nothreads=True, foreground=True)
+                print('\nFilesystem was unmounted...\n')
             continue
         elif operation != 'q':
             print('Error: invalid input.')
@@ -111,6 +192,83 @@ Please choose an operation: """)
         # logout of account
         print("\nLogging out...")
         return
+
+def adminSelection(stub, username, token):
+    while True:
+        operation = input("""
+- YOU ARE LOGGED IN -
+    [1] Update Password
+    [2] Delete Account
+    [3] Mount remote filesystem
+    [4] Create User Account
+    [5] Update User Account
+    [6] Revoke Mounting Privileges
+    [7] Change Access Control List
+    [8] Reload Access Control List
+    [q] Logout
+
+Please choose an operation: """)
+        if operation == '1':
+            updateUser(stub, username, token)
+        elif operation == '2':
+            deleteUser(stub, username, token)
+        elif operation == '3':
+            reply = stub.auth2Mount(users_pb2.auth2MountRequest(username=username,token=token))            
+            if reply.success > 0:
+                print("You have not been authorized to mount the filesystem\n")
+                if reply.success == 1:
+                    print("You shouldn't be here, you hacker\n")
+                elif reply.success == 2:
+                    print("Your token doesn't match the one on file\n")
+                elif reply.success == 3:
+                    print("Your token has expired due to inactivity.\nPlease login in again.\n")
+                    menuSelect(stub)
+                else:
+                    print("You do not have authorization to mount the filesystem.\nPlease contact your system Administrator.\n")
+                continue
+            else:
+                # display file structure
+                print('\n- FILE STRUCTURE -')
+                reply = stub.displayTree(users_pb2.DisplayTreeRequest())
+                print(reply.tree)
+            
+                # input mountpoint
+                mountpoint = input('Enter the mountpoint: ')
+                print("[ctrl+c] to unmount...")
+            
+                # mount remote fs
+                FUSE(Passthrough(REMOTE_DIRECTORY, stub, username,token), mountpoint, nothreads=True, foreground=True)
+                print('\nFilesystem was unmounted...\n')
+            continue
+        elif operation == '4':
+            #authorizeADMIN
+            newUserAccount(stub,username,token)
+            continue
+        elif operation == '5':
+            updateOtherUser(stub,username,token)
+            continue
+        elif operation == '6':
+            changeMountingPermissions(stub,username,token)
+            continue
+        elif operation == '7':
+            print("ACL not yet implemented")
+            continue
+        elif operation == '8':
+            print("ACL not yet implemented")
+            continue
+        elif operation != 'q':
+            print('Error: invalid input.')
+            continue
+
+        # logout of account
+        print("\nLogging out...")
+        menuSelect(stub)
+
+def login(stub):    
+    username = input("Enter your username: ")
+    password = getpass.getpass("Enter your password: ")
+    response = stub.loginUserAccount(users_pb2.LoginUserRequest(username=username, password=password))
+    return response
 
 # Client sends credentials to server via RPC call 
 # Server compares received credentials with locally stored credentials, and replies with authentication token to client if credentials match. The token must be a 
@@ -129,11 +287,12 @@ def menuSelect(stub):
     
 Please choose an operation: """)
         if operation == "1" :
-            username = input("Enter your username: ")
-            password = getpass.getpass("Enter your password: ")
-            response = stub.loginUserAccount(users_pb2.LoginUserRequest(username=username, password=password))
+            response = login(stub)
             if response.success:
-                userSelection(stub, username, response.token)
+                reply = stub.clearanceLevel(users_pb2.ClearanceLevelRequest(username=response.username))
+                if reply.level == 0:
+                    adminSelection(stub, response.username, response.token)
+                userSelection(stub, response.username, response.token)
             else:
                 print('Error: incorrect username/password combo.')
             
