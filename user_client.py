@@ -65,7 +65,7 @@ def newUserAccount(stub,username,token):
         if response.success:
             registerUser(stub)
         else:
-            menuSelect()
+            menuSelection(stub)
 
 # Deletes a user
 # Returns true if success
@@ -110,7 +110,7 @@ def updateOtherUser(stub,username,token):
     valid = stub.checkToken(users_pb2.CheckTokenRequest(username=username, token=token))
     if not valid.success:
         print("Your session has expired. Please Login again.")
-        menuSelection(stub)
+        menuSelect(stub)
     targetName = input("Which user would you like to change: ")
     
     while valid.success:
@@ -182,8 +182,12 @@ Please choose an operation: """)
                 print("[ctrl+c] to unmount...")
             
                 # mount remote fs
-                FUSE(Passthrough(REMOTE_DIRECTORY, stub), mountpoint, nothreads=True, foreground=True)
+                FUSE(Passthrough(REMOTE_DIRECTORY, stub, username, token), mountpoint, nothreads=True, foreground=True)
                 print('\nFilesystem was unmounted...\n')
+                valid = stub.checkToken(users_pb2.CheckTokenRequest(username=username, token=token))
+                if not valid.success:
+                    print("Your session has expired. Please Login again.")
+                    menuSelect(stub)
             continue
         elif operation != 'q':
             print('Error: invalid input.')
@@ -238,6 +242,11 @@ Please choose an operation: """)
             
                 # mount remote fs
                 FUSE(Passthrough(REMOTE_DIRECTORY, stub, username,token), mountpoint, nothreads=True, foreground=True)
+                valid = stub.checkToken(users_pb2.CheckTokenRequest(username=username, token=token))
+                if not valid.success:
+                    print("Your session has expired. Please Login again.")
+                    menuSelect(stub)
+                
                 print('\nFilesystem was unmounted...\n')
             continue
         elif operation == '4':

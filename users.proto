@@ -22,13 +22,15 @@ service Users {
   rpc displayTree (DisplayTreeRequest) returns (DisplayTreeReply) {}
 
   //checking if a user is still valid
-  rpc checkToken (CheckTokenRequest) returns (CheckTokenReply) {}
+  rpc checkToken (CheckTokenRequest) returns (SuccessReply) {}
 
   //admin functions
-  rpc changeMountPerms (ChangeMountPermsRequest) returns (ChangeMountPermsReply) {}
+  rpc changeMountPerms (ChangeMountPermsRequest) returns (SuccessReply) {}
   rpc adminUpdateUser (adminUpdateUserRequest) returns (UpdateUserReply) {}
   rpc adminCreateUser (adminCreateUserRequest) returns (CreateUserReply) {}
   rpc clearanceLevel (ClearanceLevelRequest) returns (ClearanceLevelReply) {}
+  rpc addAclRule (AddAclRequest) returns (SuccessReply) {}
+  rpc checkACL (aclCheckRequest) returns (aclCheckReply) {}
 
   // filesystem methods
   rpc fsAccess (AccessRequest) returns (JsonReply) {}
@@ -119,91 +121,112 @@ message JsonReply {
 message AccessRequest {
   string path = 1;
   int32 mode = 2;
+  string username = 3;
 }
 message ChmodRequest {
   string path = 1;
   int32 mode = 2;
+  string username = 3;
 }
 message ChownRequest {
   string path = 1;
   int32 uid = 2;
   int32 gid = 3;
+  string username = 4;
 }
 message GetAttrRequest {
   string path = 1;
   int32 fh = 2;
+  string username = 3;
 }
 message ReadDirRequest {
   string path = 1;
   int32 fh = 2;
+  string username = 3;
 }
 message RmDirRequest {
   string path = 1;
+  string username = 2;
 }
 message MkDirRequest {
   string path = 1;
   int32 mode = 2;
+  string username = 3;
 }
 message StatRequest {
   string path = 1;
+  string username = 2;
 }
 message UnlinkRequest {
   string path = 1;
+  string username = 2;
 }
 message UtimeNsRequest {
   string path = 1;
   float aTime = 2;
   float mTime = 3;
+  string username = 4;
 }
 message SymlinkRequest {
   string target = 1;
   string name = 2;
+  string username = 3;
 }
 message RenameRequest {
   string oldPath = 1;
   string newPath = 2;
+  string username = 3;
 }
 message LinkRequest {
   string name = 1;
   string target = 2;
+  string username = 3;
 }
 message FlockRequest {
   int32 fileDescriptor = 1;
   int32 lockOperation = 2;
+  string username = 3;
 }
 
 // File methods
 message OpenRequest {
   string path = 1;
   int32 flags = 2;
+  string username = 3;
 }
 message CreateRequest {
   string path = 1;
   int32 mode = 2;
   string fi = 3;
+  string username = 4;
 }
 message ReadRequest {
   string path = 1;
   int32 length = 2;
   int32 offset = 3;
   int32 fh = 4;
+  string username = 5;
 }
 message ReadReply {
   bytes data = 1; // not using JsonReply cuz data needs to be bytes
+  bool error = 2; 
 }
 message WriteRequest{
   string path = 1;
   bytes buf = 2;
   int32 offset = 3;
   int32 fh = 4;
+  string username = 5;
 }
 message FlushRequest {
   string path = 1;
   int32 fh = 2;
+  string username = 3;
 }
 message ReleaseRequest {
   string path = 1;
   int32 fh = 2;
+  string username = 3;
 }
 
 //Mounting methods
@@ -213,6 +236,10 @@ message auth2MountRequest {
 }
 message auth2MountReply {
   int32 success = 1;
+}
+
+message SuccessReply {
+  bool success = 1;
 }
 
 //admin specific methods
@@ -240,6 +267,16 @@ message adminUpdateUserRequest {
   string mountPerms = 5;
 }
 
+message AddAclRequest {
+  string username = 1;
+  string path = 2;
+  string permissions = 3;
+}
+
+message AddAclReply {
+  bool success = 1;
+}
+
 //checks if a token and username is still valid
 message CheckTokenRequest {
   string username = 1;
@@ -254,4 +291,11 @@ message ClearanceLevelRequest {
 message ClearanceLevelReply {
   int32 level = 1;
 }
-
+message aclCheckRequest{
+  string username = 1;
+  string path = 2;
+}
+message aclCheckReply{
+  bool access = 1;
+  string errorMsg = 2;
+}

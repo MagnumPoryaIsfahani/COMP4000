@@ -16,9 +16,13 @@ import time
 import secrets
 import threading
 
+from access_control_list import ACL
+
 # how long the token will remain valid in seconds
 TOKEN_LIFETIME = 30
 lock = threading.Lock()
+acl = ACL()
+acl.printRules()
 
 class Users(users_pb2_grpc.UsersServicer):
     
@@ -123,19 +127,36 @@ class Users(users_pb2_grpc.UsersServicer):
     # Filesystem methods
     # ==================
     def fsAccess(self, request, context):
+        global acl
+        #perms = acl.check(request.username,request.path)
+        #print("--ACL\t",request.username)
+        #print("--ACL\t",request.path)
+        #print("--ACL\t",perms,"\t",type(perms))
+        if int(acl.check(request.username,request.path)) == 0:
+            print("disallowed by ACL")
+            return users_pb2.JsonReply(error=True)
         if not os.access(request.path, request.mode):
             return users_pb2.JsonReply(error=True)
         return users_pb2.JsonReply(error=False)
 
     def fsChmod(self, request, context):
+        global acl
+        if int(acl.check(request.username,request.path)) != 2:
+            return users_pb2.JsonReply(error=True)
         data = os.chmod(request.path, request.mode)
         return users_pb2.JsonReply(data=json.dumps(data))
     
     def fsChown(self, request, context):
+        global acl
+        if int(acl.check(request.username,request.path)) != 2:
+            return users_pb2.JsonReply(error=True)
         data = os.chown(request.path, request.uid, request.gid)
         return users_pb2.JsonReply(data=json.dumps(data))
 
     def fsGetAttr(self, request, context):
+        global acl
+        if int(acl.check(request.username,request.path)) == 0:
+            return users_pb2.JsonReply(error=True)
         error = False
         data = {}
         try:
@@ -147,6 +168,9 @@ class Users(users_pb2_grpc.UsersServicer):
         return users_pb2.JsonReply(data=json.dumps(data), error=error)
 
     def fsReadDir(self, request, context):
+        global acl
+        if int(acl.check(request.username,request.path)) == 0:
+            return users_pb2.JsonReply(error=True)
         dirents = ['.', '..']
         
         if os.path.isdir(request.path):
@@ -155,14 +179,23 @@ class Users(users_pb2_grpc.UsersServicer):
         return users_pb2.JsonReply(data=json.dumps(dirents))
     
     def fsRmDir(self, request, context):
+        global acl
+        if int(acl.check(request.username,request.path)) != 2:
+            return users_pb2.JsonReply(error=True)
         data = os.rmdir(request.path)
         return users_pb2.JsonReply(data=json.dumps(data))
 
     def fsMkDir(self, request, context):
+        global acl
+        if int(acl.check(request.username,request.path)) != 2:
+            return users_pb2.JsonReply(error=True)
         data = os.mkdir(request.path, request.mode)
         return users_pb2.JsonReply(data=json.dumps(data))
 
     def fsStat(self, request, context):
+        global acl
+        if int(acl.check(request.username,request.path)) != 2:
+            return users_pb2.JsonReply(error=True)
         stv = os.statvfs(request.path)
         data = dict((key, getattr(stv, key)) for key in ('f_bavail', 'f_bfree',
             'f_blocks', 'f_bsize', 'f_favail', 'f_ffree', 'f_files', 'f_flag',
@@ -170,10 +203,16 @@ class Users(users_pb2_grpc.UsersServicer):
         return users_pb2.JsonReply(data=json.dumps(data))
 
     def fsUtimens(self, request, context):
+        global acl
+        if int(acl.check(request.username,request.path)) != 2:
+            return users_pb2.JsonReply(error=True)
         data = os.utime(request.path,(request.aTime, request.mTime))
         return users_pb2.JsonReply(data=json.dumps(data))
 
     def fsUnlink(self, request, context):
+        global acl
+        if int(acl.check(request.username,request.path)) != 2:
+            return users_pb2.JsonReply(error=True)
         global lock 
         lock.acquire()
         data = os.unlink(request.path)
@@ -181,48 +220,82 @@ class Users(users_pb2_grpc.UsersServicer):
         return users_pb2.JsonReply(data=json.dumps(data))
 
     def fsSymlink(self, request, context):
+        global acl
+        if int(acl.check(request.username,request.path)) != 2:
+            return users_pb2.JsonReply(error=True)
         data = os.symlink(request.target, request.name)
         return users_pb2.JsonReply(data=json.dumps(data))
     
     def fsRename(self, request, context):
+        global acl
+        if int(acl.check(request.username,request.oldPath)) != 2:
+            return users_pb2.JsonReply(error=True)
         data = os.rename(request.oldPath, request.newPath)
         return users_pb2.JsonReply(data=json.dumps(data))
     
     def fsLink(self, request, context):
+        global acl
+        if int(acl.check(request.username,request.name)) != 2:
+            return users_pb2.JsonReply(error=True)
+        if int(acl.check(request.username,request.target)) != 2:
+            return users_pb2.JsonReply(error=True)
+
         data = os.link(request.name, request.target)
         return users_pb2.JsonReply(data=json.dumps(data))
 
     def fsFlock(self, request, context):
+        #global acl
+        #if int(acl.check(request.username,request.path)) != 2:
+        #    return users_pb2.JsonReply(error=True)
         data = os.flock(request.fileDescriptor, request.lockOperation)
-        return users_pb2.JsonReply(data=json.dumps(data))
+        return users_pb2.JsonReply(data=json.dumps(data),error=False)
 
     # File methods
     # ============
     def fileOpen(self, request, context):
+        global acl
+        if int(acl.check(request.username,request.path)) == 0:
+            return users_pb2.JsonReply(error=True)
+        #print("Flags::",request.flags)
         data = os.open(request.path, request.flags)       
         return users_pb2.JsonReply(data=json.dumps(data))
 
     def fileCreate(self, request, context):
+        global acl
+        if int(acl.check(request.username,request.path)) != 2:
+           return users_pb2.JsonReply(error=True)
         data = os.open(request.path, os.O_RDWR | os.O_CREAT, request.mode)
-        return users_pb2.JsonReply(data=json.dumps(data))
+        return users_pb2.JsonReply(data=json.dumps(data),error=False)
 
     def fileRead(self, request, context):
+        #global acl
+        #if int(acl.check(request.username,request.path)) == 0:
+        #    return users_pb2.JsonReply(data="-1",error=True)
         os.lseek(request.fh, request.offset, os.SEEK_SET)
         data = os.read(request.fh, request.length)
-        return users_pb2.ReadReply(data=data)
+        return users_pb2.ReadReply(data=data,error=False)
 
     def fileWrite(self, request, context):  
+        global acl
+        if int(acl.check(request.username,request.path)) != 2:
+            return users_pb2.JsonReply(error=True)
         global lock 
         lock.acquire()
         os.lseek(request.fh, request.offset, os.SEEK_SET)
-        reply = users_pb2.JsonReply(data=json.dumps(os.write(request.fh, request.buf)))
+        reply = users_pb2.JsonReply(data=json.dumps(os.write(request.fh, request.buf)),error=False)
         lock.release()
         return reply
 
     def fileFlush(self, request, context):
+        #global acl
+        #if int(acl.check(request.username,request.path)) == 0:
+        #    return users_pb2.JsonReply(error=True)
         return users_pb2.JsonReply(data=json.dumps(os.fsync(request.fh)))
 
     def fileRelease(self, request, context):
+        global acl
+        if int(acl.check(request.username,request.path)) == 0:
+            return users_pb2.JsonReply(error=True)
         return users_pb2.JsonReply(data=json.dumps(os.close(request.fh)))        
 
     def saveUserToDB(self, user, username):
@@ -260,13 +333,14 @@ class Users(users_pb2_grpc.UsersServicer):
             return users_pb2.auth2MountReply(success=4)
 
         return users_pb2.auth2MountReply(success=0)
+    
     def checkToken(self, request, context):
         user = self.fetchUserFromDB(request.username)
         if user.get("token",0) == request.token and user.get("login_time",0)+TOKEN_LIFETIME > time.time():
             user["login_time"] = time.time()
-            saveUserToDB(user,request.username)
-            return users_pb2.CheckTokenReply(success=True)
-        return users_pb2.CheckTokenReply(success=False)
+            self.saveUserToDB(user,request.username)
+            return users_pb2.SuccessReply(success=True)
+        return users_pb2.SuccessReply(success=False)
 
     def fetchUserFromDB(self, username):
         # error if db doesn't exist or is empty
@@ -302,7 +376,13 @@ class Users(users_pb2_grpc.UsersServicer):
         user = self.fetchUserFromDB(request.targetName)
         user["mount_perms"] = request.value
         self.saveUserToDB(user, request.targetName)
-        return users_pb2.ChangeMountPermsReply(success=True)
+        return users_pb2.SuccessReply(success=True)
+
+
+    def addAclRule(self, request, context):
+        global acl
+        acl.newRule(request.username,request.path,request.permissions)
+        return users_pb2.SuccessReply(success=True)
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
