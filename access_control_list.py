@@ -16,12 +16,20 @@ class ACL:
         for rule in self.rules:
             print(rule)
 
+    def removeRule(self, username, path, permissions):  
+        rule = {"username":username,"path":path,"permissions":permissions}
+        self.newRules.remove(rule)
+        return True
+
     def loadRules(self):
         with open("aclRules.json","r") as aclFile:
             self.rules.clear()
+            self.newRules.clear()
             rules = json.load(aclFile)
             for rule in rules:
                 self.rules.append(rule)
+                self.newRules.append(rule)
+            aclFile.close()
             return True
         return False
 
@@ -39,11 +47,13 @@ class ACL:
         with open("aclRules.json","w") as aclFile:
             #self.rules.extend(self.newRules)
             #self.printRules()
-            #aclFile.seek(0,0)
+            aclFile.seek(0)
             json.dump(self.newRules,aclFile)
-            
+            aclFile.close()
+
     def __del__(self):
         self.writeRules()
+        print("deleting acl")
 
 def main():
     acl = ACL()
@@ -55,7 +65,7 @@ def main():
     acl.newRule("public","/home/student/fuse/config",0)
     acl.newRule("public","/home/student/fuse/trusted",0)
     acl.newRule("public","/home/student/fuse/public",1) #user public can read from public and do nothing else
-    
+    acl.newRule("carter","/home/student/fuse",2)
     acl.writeRules()
     acl.loadRules()
     print(acl.check("admin","/home/student/fuse"))
@@ -65,5 +75,11 @@ def main():
     print(acl.check("trusted","/home/student/fuse/trusted"))
     print(acl.check("trusted","/home/student/fuse/config"))
     print(acl.check("trusted","/home/student/fuse/middle"))
+    
+    acl.removeRule("carter","/home/student/fuse",2)
+    acl.writeRules()
+    acl.loadRules()
+    print(acl.newRules)
+    acl.printRules()
 
 #main()

@@ -206,7 +206,7 @@ def adminSelection(stub, username, token):
     [3] Mount remote filesystem
     [4] Create User Account
     [5] Update User Account
-    [6] Revoke Mounting Privileges
+    [6] Change Mounting Privileges
     [7] Change Access Control List
     [8] Reload Access Control List
     [q] Logout
@@ -260,10 +260,7 @@ Please choose an operation: """)
             changeMountingPermissions(stub,username,token)
             continue
         elif operation == '7':
-            print("ACL not yet implemented")
-            continue
-        elif operation == '8':
-            print("ACL not yet implemented")
+            changeACLrules(stub,username,token)
             continue
         elif operation != 'q':
             print('Error: invalid input.')
@@ -272,6 +269,42 @@ Please choose an operation: """)
         # logout of account
         print("\nLogging out...")
         menuSelect(stub)
+
+def changeACLrules(stub,username,token):
+    keyIn = input("""
+    [0] add rule
+    [1] remove rule
+    [2] reload ACL
+    [q] quit
+    """)
+    while True:
+        if keyIn == "0":
+            uName = input("Enter a username: ")
+            path = input("Enter a path: ")
+            perms = input("Enter Permissions (0/1/2): ")
+            response = stub.addAclRule(users_pb2.AddAclRequest(username=uName,path=path,permissions=perms))
+            if response.success:
+                print("New ACL rule added")
+            adminSelection(stub,username,token)
+        elif keyIn == "1":
+            uName = input("Enter a username: ")
+            path = input("Enter a path: ")
+            perms = input("Enter Permissions (0/1/2): ")         
+            response = stub.removeAclRule(users_pb2.RemoveAclRequest(username=uName,path=path,permissions=perms))
+            if response.success:
+                print("ACL rule removed")
+            adminSelection(stub,username,token)
+        elif keyIn == "2":
+            stub.reloadACL(users_pb2.ReloadAclRequest(username=username))
+            adminSelection(stub,username,token)
+        elif keyIn == "q":
+            adminSelection(stub,username,token)
+        else:
+            print("invalid input")
+            continue
+
+def reloadACL(stub,username,token):
+    response = stub.reloadACL(users_pb2.ReloadAclRequest(username=username))
 
 def login(stub):    
     username = input("Enter your username: ")

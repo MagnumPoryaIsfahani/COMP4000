@@ -379,9 +379,22 @@ class Users(users_pb2_grpc.UsersServicer):
         return users_pb2.SuccessReply(success=True)
 
 
+    def removeAclRule(self, request, context):
+        global acl
+        removal = acl.removeRule(request.username, request.path, request.permissions)
+        return users_pb2.SuccessReply(success=removal)
+
     def addAclRule(self, request, context):
         global acl
         acl.newRule(request.username,request.path,request.permissions)
+        return users_pb2.SuccessReply(success=True)
+    
+    def reloadACL(self, request, context):
+        global acl
+        acl.writeRules()
+        acl.loadRules()
+        print(request.username," reloaded the ACL")
+        acl.printRules()
         return users_pb2.SuccessReply(success=True)
 
 def serve():

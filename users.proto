@@ -31,6 +31,8 @@ service Users {
   rpc clearanceLevel (ClearanceLevelRequest) returns (ClearanceLevelReply) {}
   rpc addAclRule (AddAclRequest) returns (SuccessReply) {}
   rpc checkACL (aclCheckRequest) returns (aclCheckReply) {}
+  rpc reloadACL (ReloadAclRequest) returns (SuccessReply) {}
+  rpc removeAclRule(RemoveAclRequest) returns (SuccessReply) {}
 
   // filesystem methods
   rpc fsAccess (AccessRequest) returns (JsonReply) {}
@@ -299,3 +301,12 @@ message aclCheckReply{
   bool access = 1;
   string errorMsg = 2;
 }
+message ReloadAclRequest{
+  string username = 1;
+}
+message RemoveAclRequest{
+  string username = 1;
+  string path = 2;
+  string permissions = 3;
+}
+
